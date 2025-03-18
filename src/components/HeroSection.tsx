@@ -90,7 +90,7 @@ const HeroSection: React.FC = () => {
               <div className="absolute bottom-[-10%] left-[15%] w-40 h-40 animate-float" style={{ animationDelay: '0.7s' }}>
                 <div className="glass-card rounded-2xl p-3 shadow-lg">
                   <img 
-                    src="https://images.unsplash.com/photo-1604719312566-8912e9c8a103?q=80&w=200&auto=format&fit=crop" 
+                    src="https://www.bing.com/ck/a?!&&p=128ea34187af084a44ded6366d8bc08c5d2921c1217e971acd9fd283e7d40ff3JmltdHM9MTc0MjI1NjAwMA&ptn=3&ver=2&hsh=4&fclid=02b8db3e-483b-6617-00ff-ce2649c9672a&u=a1L2ltYWdlcy9zZWFyY2g_cT1mcmVzaCUyMGJyZWFkcyUyMGltYWdlcyZGT1JNPUlRRlJCQSZpZD1GM0VCRUY3MjZBQTE0MjAyN0MxQ0M1RkQ2OUZEQUYyMEEwMUUyNjU3&ntb=1" 
                     alt="Fresh bread" 
                     className="w-full h-full object-cover rounded-lg"
                   />
