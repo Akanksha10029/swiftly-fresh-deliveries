@@ -12,20 +12,20 @@ const HeroSection: React.FC = () => {
       
       <div className="max-w-7xl mx-auto px-6 md:px-10">
         <div className="flex flex-col md:flex-row items-center justify-between gap-10 pt-10 md:pt-20">
-          <div className="flex flex-col space-y-8 md:w-1/2 z-10">
+          <div className="flex flex-col space-y-6 md:space-y-8 md:w-1/2 z-10">
             <div className="animate-fade-in" style={{ animationDelay: '0.2s' }}>
               <span className="px-4 py-1.5 text-xs font-medium bg-accent/10 text-accent rounded-full">
                 Delivering in 10 minutes
               </span>
             </div>
             
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight tracking-tighter animate-fade-in" style={{ animationDelay: '0.4s' }}>
+            <h1 className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold leading-tight tracking-tighter animate-fade-in" style={{ animationDelay: '0.4s' }}>
               Your Essentials,
               <br />
               <span className="text-gradient">Delivered in a Flash</span>
             </h1>
             
-            <p className="text-lg text-gray-600 max-w-lg animate-fade-in" style={{ animationDelay: '0.6s' }}>
+            <p className="text-base md:text-lg text-gray-600 max-w-lg animate-fade-in" style={{ animationDelay: '0.6s' }}>
               Get groceries, fresh produce, and everyday essentials delivered to your door in minutes. Faster, fresher, and smarter than you've ever experienced.
             </p>
             
@@ -38,13 +38,13 @@ const HeroSection: React.FC = () => {
                   className="w-full pl-12 pr-4 py-3 rounded-full border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
                 />
               </div>
-              <button className="px-8 py-3 bg-primary text-white rounded-full font-medium flex items-center justify-center group hover:bg-primary/90 transition-colors">
+              <button className="px-6 sm:px-8 py-3 bg-primary text-white rounded-full font-medium flex items-center justify-center group hover:bg-primary/90 transition-colors shrink-0">
                 Order Now 
                 <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
               </button>
             </div>
             
-            <div className="flex items-center gap-8 text-sm text-gray-500 animate-fade-in" style={{ animationDelay: '1s' }}>
+            <div className="flex flex-wrap items-center gap-4 md:gap-8 text-sm text-gray-500 animate-fade-in" style={{ animationDelay: '1s' }}>
               <div className="flex items-center gap-2">
                 <div className="w-1 h-1 rounded-full bg-primary"></div>
                 <span>Zero delivery fee</span>
@@ -60,8 +60,8 @@ const HeroSection: React.FC = () => {
             </div>
           </div>
           
-          <div className="relative md:w-1/2 h-full flex items-center justify-center z-0">
-            <div className="relative w-full max-w-md aspect-square">
+          <div className="relative md:w-1/2 h-full flex items-center justify-center z-0 mt-10 md:mt-0">
+            <div className="relative w-full max-w-md aspect-square hidden md:block">
               <div className={cn(
                 "absolute w-full h-full rounded-full bg-gradient-to-br from-accent/20 to-primary/20",
                 "animate-pulse opacity-70"
@@ -95,6 +95,17 @@ const HeroSection: React.FC = () => {
                     className="w-full h-full object-cover rounded-lg"
                   />
                 </div>
+              </div>
+            </div>
+
+            {/* Mobile-only single image */}
+            <div className="md:hidden w-full max-w-xs">
+              <div className="glass-card rounded-2xl p-4 shadow-lg">
+                <img 
+                  src="https://images.unsplash.com/photo-1610832958506-aa56368176cf?q=80&w=300&auto=format&fit=crop" 
+                  alt="Fresh produce" 
+                  className="w-full h-full object-cover rounded-lg"
+                />
               </div>
             </div>
           </div>
