@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Calendar, Home, Inbox, Search, Settings, ShoppingBasket, Pill, Wrench, Siren } from 'lucide-react';
+import { Calendar, Home, Inbox, Search, Settings, ShoppingBasket, Pill, Wrench, Siren, Tag as TagIcon, Clipboard as ClipboardIcon } from 'lucide-react';
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -59,14 +59,14 @@ export const NavigationDesktopMenu = () => {
         
         <NavigationMenuItem>
           <NavigationMenuLink href="#" className="px-4 py-2 text-sm font-medium hover:text-primary transition-colors">
-            <Tag className="h-4 w-4 mr-2 inline-block" />
+            <TagIcon className="h-4 w-4 mr-2 inline-block" />
             Offers
           </NavigationMenuLink>
         </NavigationMenuItem>
         
         <NavigationMenuItem>
           <NavigationMenuLink href="#" className="px-4 py-2 text-sm font-medium hover:text-primary transition-colors">
-            <Clipboard className="h-4 w-4 mr-2 inline-block" />
+            <ClipboardIcon className="h-4 w-4 mr-2 inline-block" />
             My Orders
           </NavigationMenuLink>
         </NavigationMenuItem>
