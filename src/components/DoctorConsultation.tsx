@@ -19,22 +19,34 @@ const DoctorConsultation = () => {
               <h3 className="text-base sm:text-lg md:text-xl font-semibold">Choose Consultation</h3>
             </div>
             <div className="space-y-3">
-              <Button variant="outline" className="w-full justify-start gap-2 text-xs sm:text-sm py-2 h-auto" size="sm">
-                <MessageCircle className="h-4 w-4 text-blue-500" />
-                Chat Consultation
+              <Button 
+                variant="outline" 
+                className="w-full justify-start gap-2 text-xs sm:text-sm py-2 h-auto flex-wrap" 
+                size="sm"
+              >
+                <MessageCircle className="h-4 w-4 text-blue-500 flex-shrink-0" />
+                <span className="truncate">Chat Consultation</span>
               </Button>
-              <Button variant="outline" className="w-full justify-start gap-2 text-xs sm:text-sm py-2 h-auto" size="sm">
-                <Phone className="h-4 w-4 text-blue-500" />
-                Voice Call
+              <Button 
+                variant="outline" 
+                className="w-full justify-start gap-2 text-xs sm:text-sm py-2 h-auto" 
+                size="sm"
+              >
+                <Phone className="h-4 w-4 text-blue-500 flex-shrink-0" />
+                <span className="truncate">Voice Call</span>
               </Button>
-              <Button variant="outline" className="w-full justify-start gap-2 text-xs sm:text-sm py-2 h-auto" size="sm">
-                <Video className="h-4 w-4 text-blue-500" />
-                Video Call
+              <Button 
+                variant="outline" 
+                className="w-full justify-start gap-2 text-xs sm:text-sm py-2 h-auto" 
+                size="sm"
+              >
+                <Video className="h-4 w-4 text-blue-500 flex-shrink-0" />
+                <span className="truncate">Video Call</span>
               </Button>
             </div>
-            <p className="mt-3 text-xs text-gray-600">
-              <Clock className="h-3 w-3 inline mr-1" />
-              Connect with a doctor in under 2 minutes
+            <p className="mt-3 text-xs text-gray-600 flex items-center">
+              <Clock className="h-3 w-3 mr-1 flex-shrink-0" />
+              <span className="truncate">Connect with a doctor in under 2 minutes</span>
             </p>
           </div>
 
@@ -54,9 +66,12 @@ const DoctorConsultation = () => {
                   Get your prescription instantly
                 </p>
               </div>
-              <Button className="w-full bg-green-500 hover:bg-green-600 text-xs sm:text-sm py-2 h-auto" size="sm">
-                <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                Add Medicines to Cart
+              <Button 
+                className="w-full bg-green-500 hover:bg-green-600 text-xs sm:text-sm py-2 h-auto flex items-center justify-center"
+                size="sm"
+              >
+                <ShoppingCart className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 flex-shrink-0" />
+                <span className="truncate">Add Medicines to Cart</span>
               </Button>
             </div>
           </div>
