@@ -10,11 +10,9 @@ import { NavigationDesktopMenu } from './navigation/NavigationDesktopMenu';
 import { NavigationSearchBar } from './navigation/NavigationSearchBar';
 import { NavigationActions } from './navigation/NavigationActions';
 import { NavigationMobileMenu } from './navigation/NavigationMobileMenu';
-import { AssistantButton } from './navigation/AssistantButton';
 
 const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [showAssistant, setShowAssistant] = useState(false);
   const isMobile = useIsMobile();
   const isScrolled = useScroll();
 
@@ -49,11 +47,6 @@ const Navigation = () => {
       </div>
 
       {isMobile && <NavigationMobileMenu isOpen={isMenuOpen} />}
-
-      <AssistantButton 
-        showAssistant={showAssistant} 
-        onToggleAssistant={() => setShowAssistant(!showAssistant)} 
-      />
     </header>
   );
 };
