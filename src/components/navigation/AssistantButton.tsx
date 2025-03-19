@@ -38,11 +38,15 @@ export const AssistantButton = ({
         <Button 
           className="rounded-full shadow-lg bg-primary hover:bg-primary/90 h-12 w-12 p-0"
           onClick={onToggleAssistant}
+          aria-label="Chat assistant"
         >
           {showAssistant ? <X className="h-5 w-5" /> : <MessageCircle className="h-5 w-5" />}
         </Button>
         
-        <Button className="rounded-full shadow-lg bg-red-500 hover:bg-red-600 h-12 w-12 p-0">
+        <Button 
+          className="rounded-full shadow-lg bg-red-500 hover:bg-red-600 h-12 w-12 p-0"
+          aria-label="Emergency assistance"
+        >
           <Siren className="h-5 w-5" />
         </Button>
       </div>
