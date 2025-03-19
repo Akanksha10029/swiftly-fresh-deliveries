@@ -10,10 +10,11 @@ import { NavigationDesktopMenu } from './navigation/NavigationDesktopMenu';
 import { NavigationSearchBar } from './navigation/NavigationSearchBar';
 import { NavigationActions } from './navigation/NavigationActions';
 import { NavigationMobileMenu } from './navigation/NavigationMobileMenu';
-// Removed AssistantButton import since we'll handle it separately
+import { AssistantButton } from './navigation/AssistantButton';
 
 const Navigation = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [showAssistant, setShowAssistant] = useState(false);
   const isMobile = useIsMobile();
   const isScrolled = useScroll();
 
@@ -39,7 +40,7 @@ const Navigation = () => {
           <Button 
             variant="outline"
             size="icon"
-            className="p-2 z-50"
+            className="p-2"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
           >
             {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -48,8 +49,11 @@ const Navigation = () => {
       </div>
 
       {isMobile && <NavigationMobileMenu isOpen={isMenuOpen} />}
-      
-      {/* Removed AssistantButton from here */}
+
+      <AssistantButton 
+        showAssistant={showAssistant} 
+        onToggleAssistant={() => setShowAssistant(!showAssistant)} 
+      />
     </header>
   );
 };
