@@ -61,6 +61,7 @@ const HeroSection: React.FC = () => {
           </div>
           
           <div className="relative md:w-1/2 h-full flex items-center justify-center z-0 mt-10 md:mt-0">
+            {/* Hide floating images on small screens */}
             <div className="relative w-full max-w-md aspect-square hidden md:block">
               <div className={cn(
                 "absolute w-full h-full rounded-full bg-gradient-to-br from-accent/20 to-primary/20",
@@ -90,7 +91,7 @@ const HeroSection: React.FC = () => {
               <div className="absolute bottom-[-10%] left-[15%] w-40 h-40 animate-float" style={{ animationDelay: '0.7s' }}>
                 <div className="glass-card rounded-2xl p-3 shadow-lg">
                   <img 
-                    src="https://www.bing.com/ck/a?!&&p=128ea34187af084a44ded6366d8bc08c5d2921c1217e971acd9fd283e7d40ff3JmltdHM9MTc0MjI1NjAwMA&ptn=3&ver=2&hsh=4&fclid=02b8db3e-483b-6617-00ff-ce2649c9672a&u=a1L2ltYWdlcy9zZWFyY2g_cT1mcmVzaCUyMGJyZWFkcyUyMGltYWdlcyZGT1JNPUlRRlJCQSZpZD1GM0VCRUY3MjZBQTE0MjAyN0MxQ0M1RkQ2OUZEQUYyMEEwMUUyNjU3&ntb=1" 
+                    src="https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?q=80&w=240&auto=format&fit=crop" 
                     alt="Fresh bread" 
                     className="w-full h-full object-cover rounded-lg"
                   />

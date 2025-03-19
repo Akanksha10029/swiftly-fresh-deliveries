@@ -40,7 +40,7 @@ const Navigation = () => {
           <Button 
             variant="outline"
             size="icon"
-            className="p-2 z-50"
+            className="p-2"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
           >
             {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
