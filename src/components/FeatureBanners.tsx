@@ -7,17 +7,17 @@ const FeatureBanners = () => {
     <div className="py-8 bg-white">
       <div className="max-w-7xl mx-auto px-6 md:px-10">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Pharmacy Banner */}
-          <div className="relative overflow-hidden rounded-2xl h-64 bg-cyan-500 flex flex-col justify-center px-8">
-            <div className="absolute top-0 right-0 w-32 h-32 -mt-8 -mr-8 bg-cyan-400 rounded-full opacity-50"></div>
-            <div className="absolute bottom-0 left-0 w-24 h-24 -mb-8 -ml-8 bg-cyan-600 rounded-full opacity-30"></div>
+          {/* Skincare Banner */}
+          <div className="relative overflow-hidden rounded-2xl h-64 bg-teal-400 flex flex-col justify-center px-8">
+            <div className="absolute top-0 right-0 w-32 h-32 -mt-8 -mr-8 bg-teal-300 rounded-full opacity-50"></div>
+            <div className="absolute bottom-0 left-0 w-24 h-24 -mb-8 -ml-8 bg-teal-500 rounded-full opacity-30"></div>
             <h3 className="text-2xl font-bold text-white mb-2 z-10">
-              Pharmacy at your doorstep!
+              Skincare at your doorstep!
             </h3>
             <p className="text-white/90 mb-4 z-10">
-              Cough syrups, pain relief sprays & more
+              Serums, moisturizers, cleansers & more
             </p>
-            <Button className="bg-white text-cyan-600 hover:bg-white/90 w-fit z-10">
+            <Button className="bg-white text-teal-600 hover:bg-white/90 w-fit z-10">
               Order Now
             </Button>
           </div>

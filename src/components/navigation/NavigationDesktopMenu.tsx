@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Calendar, Home, Inbox, Search, Settings, ShoppingBasket, Pill, Wrench, Siren, Tag as TagIcon, Clipboard as ClipboardIcon } from 'lucide-react';
+import { Calendar, Home, Inbox, Search, Settings, ShoppingBasket, Sparkles, Wrench, Siren, Tag as TagIcon, Clipboard as ClipboardIcon } from 'lucide-react';
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -33,10 +33,10 @@ export const NavigationDesktopMenu = () => {
                 </div>
               </NavigationMenuLink>
               <NavigationMenuLink href="#" className="flex items-center p-3 hover:bg-gray-100 rounded-lg">
-                <Pill className="h-5 w-5 text-cyan-500 mr-2" />
+                <Sparkles className="h-5 w-5 text-teal-500 mr-2" />
                 <div>
-                  <div className="font-medium">Pharmacy</div>
-                  <p className="text-xs text-gray-500">Medicines & healthcare</p>
+                  <div className="font-medium">Skincare</div>
+                  <p className="text-xs text-gray-500">Beauty & personal care</p>
                 </div>
               </NavigationMenuLink>
               <NavigationMenuLink href="#" className="flex items-center p-3 hover:bg-gray-100 rounded-lg">
