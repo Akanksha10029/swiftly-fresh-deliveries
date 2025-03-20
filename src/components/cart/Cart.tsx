@@ -47,7 +47,7 @@ const Cart: React.FC = () => {
             </div>
           </SheetHeader>
 
-          {cartItems.length > a 0 ? (
+          {cartItems.length > 0 ? (
             <div className="flex flex-col h-full">
               <div className="flex-1 overflow-auto">
                 {/* Delivery details */}
