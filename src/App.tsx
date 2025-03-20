@@ -7,10 +7,15 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useState } from "react";
 import { AssistantButton } from "./components/navigation/AssistantButton";
 import { CartProvider } from "./context/CartContext";
+import { AuthProvider } from "./context/AuthContext";
 import Index from "./pages/Index";
 import Products from "./pages/Products";
 import NotFound from "./pages/NotFound";
 import Cart from "./components/cart/Cart"; 
+import SignIn from "./pages/Auth/SignIn";
+import SignUp from "./pages/Auth/SignUp";
+import Orders from "./pages/Orders";
+import EmergencyProducts from "./pages/EmergencyProducts";
 
 const queryClient = new QueryClient();
 
@@ -20,24 +25,30 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <CartProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/products" element={<Products />} />
-              <Route path="/products/:category" element={<Products />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-            <Cart />
-            <AssistantButton 
-              showAssistant={showAssistant} 
-              onToggleAssistant={() => setShowAssistant(!showAssistant)} 
-            />
-          </BrowserRouter>
-        </CartProvider>
+        <BrowserRouter>
+          <AuthProvider>
+            <CartProvider>
+              <Toaster />
+              <Sonner />
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/products" element={<Products />} />
+                <Route path="/products/:category" element={<Products />} />
+                <Route path="/products/emergency" element={<EmergencyProducts />} />
+                <Route path="/auth/signin" element={<SignIn />} />
+                <Route path="/auth/signup" element={<SignUp />} />
+                <Route path="/orders" element={<Orders />} />
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+              <Cart />
+              <AssistantButton 
+                showAssistant={showAssistant} 
+                onToggleAssistant={() => setShowAssistant(!showAssistant)} 
+              />
+            </CartProvider>
+          </AuthProvider>
+        </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
   );
