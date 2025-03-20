@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
@@ -14,6 +14,11 @@ const Products: React.FC = () => {
   
   // Default to showing all categories if no specific category is selected
   const [activeCategory, setActiveCategory] = useState<string | undefined>(category);
+
+  // Update active category when URL parameter changes
+  useEffect(() => {
+    setActiveCategory(category);
+  }, [category]);
 
   const handleCategoryChange = (category: string) => {
     navigate(`/products/${category}`);
@@ -35,7 +40,7 @@ const Products: React.FC = () => {
             Back to Home
           </Button>
           <h1 className="text-2xl md:text-3xl font-bold">
-            {activeCategory ? `${activeCategory}` : 'All Products'}
+            {activeCategory ? `${activeCategory.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}` : 'All Products'}
           </h1>
         </div>
 
