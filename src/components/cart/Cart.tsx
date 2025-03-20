@@ -47,7 +47,7 @@ const Cart: React.FC = () => {
             </div>
           </SheetHeader>
 
-          {cartItems.length > 0 ? (
+          {cartItems.length > a 0 ? (
             <div className="flex flex-col h-full">
               <div className="flex-1 overflow-auto">
                 {/* Delivery details */}
@@ -62,7 +62,7 @@ const Cart: React.FC = () => {
                       </div>
                     </div>
                     <div>
-                      <h3 className="font-bold text-base">Delivery in {cartItems[0].deliveryTime || '9 minutes'}</h3>
+                      <h3 className="font-bold text-base">Delivery in {cartItems[0]?.deliveryTime || '9 minutes'}</h3>
                       <p className="text-gray-500 text-sm">Shipment of {totalItems} {totalItems === 1 ? 'item' : 'items'}</p>
                     </div>
                   </div>

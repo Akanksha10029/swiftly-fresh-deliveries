@@ -8,6 +8,7 @@ export type CartItem = {
   quantity: number;
   image: string;
   productQuantity: string; // e.g., "500 ml", "1 kg"
+  deliveryTime?: string; // Added the deliveryTime property as optional
 };
 
 type CartContextType = {
@@ -31,7 +32,6 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [totalItems, setTotalItems] = useState(0);
   const [subtotal, setSubtotal] = useState(0);
 
-  // Calculate totals whenever cart changes
   useEffect(() => {
     const items = cartItems.reduce((acc, item) => acc + item.quantity, 0);
     const total = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
@@ -42,11 +42,9 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const addToCart = (product: any) => {
     setCartItems(prevItems => {
-      // Check if product is already in cart
       const existingItem = prevItems.find(item => item.id === product.id);
       
       if (existingItem) {
-        // Increase quantity if already in cart
         const updatedItems = prevItems.map(item => 
           item.id === product.id 
             ? { ...item, quantity: item.quantity + 1 } 
@@ -54,14 +52,14 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         );
         return updatedItems;
       } else {
-        // Add new item to cart
         const newItem: CartItem = {
           id: product.id,
           name: product.name,
           price: product.price,
           quantity: 1,
           image: product.image,
-          productQuantity: product.quantity
+          productQuantity: product.quantity,
+          deliveryTime: product.deliveryTime
         };
         
         toast({
@@ -90,12 +88,10 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const decreaseQuantity = (productId: string) => {
     setCartItems(prevItems => {
-      // If quantity is 1, remove the item
       if (prevItems.find(item => item.id === productId)?.quantity === 1) {
         return prevItems.filter(item => item.id !== productId);
       }
       
-      // Otherwise decrease quantity
       return prevItems.map(item => 
         item.id === productId 
           ? { ...item, quantity: item.quantity - 1 } 
