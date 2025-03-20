@@ -1,6 +1,9 @@
+
 import React from 'react';
 import { ArrowRight, Search } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+
 const HeroSection: React.FC = () => {
   return <div className="relative min-h-screen w-full overflow-hidden pt-24">
       {/* Background circles */}
@@ -39,10 +42,10 @@ const HeroSection: React.FC = () => {
                 <Search className="absolute left-4 top-3 h-5 w-5 text-gray-400" />
                 <input type="text" placeholder="Search for items..." className="w-full pl-12 pr-4 py-3 rounded-full border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all" />
               </div>
-              <button className="px-6 sm:px-8 py-3 bg-primary text-white rounded-full font-medium flex items-center justify-center group hover:bg-primary/90 transition-colors shrink-0">
+              <Link to="/products" className="px-6 sm:px-8 py-3 bg-primary text-white rounded-full font-medium flex items-center justify-center group hover:bg-primary/90 transition-colors shrink-0">
                 Order Now 
                 <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-              </button>
+              </Link>
             </div>
             
             <div className="flex flex-wrap items-center gap-4 md:gap-8 text-sm text-gray-500 animate-fade-in" style={{
@@ -104,4 +107,5 @@ const HeroSection: React.FC = () => {
       </div>
     </div>;
 };
+
 export default HeroSection;

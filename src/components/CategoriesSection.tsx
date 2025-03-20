@@ -3,17 +3,20 @@ import React from 'react';
 import { Pill, ShoppingBasket, Home, Siren, Utensils, Briefcase } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { Link } from 'react-router-dom';
 
 const CategoryCard = ({ 
   icon: Icon, 
   title, 
   description, 
-  color 
+  color,
+  categoryId
 }: { 
   icon: React.ElementType; 
   title: string; 
   description: string; 
   color: string;
+  categoryId: string;
 }) => {
   return (
     <div className={cn(
@@ -33,9 +36,11 @@ const CategoryCard = ({
       </div>
       <h3 className="text-base sm:text-lg font-semibold mb-1 text-center">{title}</h3>
       <p className="text-xs sm:text-sm text-gray-500 text-center mb-3 sm:mb-4 line-clamp-2">{description}</p>
-      <Button variant="outline" size="sm" className="mt-auto text-xs sm:text-sm">
-        Explore
-      </Button>
+      <Link to={`/products/${categoryId}`}>
+        <Button variant="outline" size="sm" className="mt-auto text-xs sm:text-sm">
+          Explore
+        </Button>
+      </Link>
     </div>
   );
 };
@@ -46,37 +51,43 @@ const CategoriesSection = () => {
       icon: ShoppingBasket,
       title: "Groceries",
       description: "Fresh produce & essentials",
-      color: "bg-emerald-500"
+      color: "bg-emerald-500",
+      categoryId: "fruits-vegetables"
     },
     {
       icon: Pill,
-      title: "Pharmacy",
-      description: "Medicines & healthcare",
-      color: "bg-cyan-500"
+      title: "Skincare",
+      description: "Beauty & healthcare",
+      color: "bg-cyan-500",
+      categoryId: "skincare-wellness"
     },
     {
       icon: Home,
       title: "Home Services",
       description: "Cleaning & maintenance",
-      color: "bg-amber-500"
+      color: "bg-amber-500",
+      categoryId: "cleaning-essentials"
     },
     {
       icon: Siren,
       title: "Emergency Needs",
       description: "24/7 urgent supplies",
-      color: "bg-red-500"
+      color: "bg-red-500",
+      categoryId: "baby-care"
     },
     {
       icon: Utensils,
       title: "Meal Kits & Recipes",
       description: "Ready-to-cook ingredients",
-      color: "bg-indigo-500"
+      color: "bg-indigo-500",
+      categoryId: "breakfast-instant"
     },
     {
       icon: Briefcase,
       title: "Office Supplies",
       description: "Stationery & essentials",
-      color: "bg-purple-500"
+      color: "bg-purple-500",
+      categoryId: "home-office"
     }
   ];
 
@@ -94,6 +105,7 @@ const CategoriesSection = () => {
               title={category.title}
               description={category.description}
               color={category.color}
+              categoryId={category.categoryId}
             />
           ))}
         </div>

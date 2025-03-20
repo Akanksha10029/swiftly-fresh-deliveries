@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Search, Home, ShoppingBasket, Tag, Clipboard, MapPin, User, ShoppingCart } from 'lucide-react';
 
 interface NavigationMobileMenuProps {
@@ -20,34 +21,34 @@ export const NavigationMobileMenu = ({ isOpen }: NavigationMobileMenuProps) => {
         />
       </div>
       <nav className="flex flex-col space-y-3">
-        <a href="#" className="flex items-center text-sm font-medium py-2">
+        <Link to="/" className="flex items-center text-sm font-medium py-2">
           <Home className="h-4 w-4 mr-2" />
           <span>Home</span>
-        </a>
-        <a href="#" className="flex items-center text-sm font-medium py-2">
+        </Link>
+        <Link to="/products" className="flex items-center text-sm font-medium py-2">
           <ShoppingBasket className="h-4 w-4 mr-2" />
-          <span>Categories</span>
-        </a>
-        <a href="#" className="flex items-center text-sm font-medium py-2">
+          <span>All Products</span>
+        </Link>
+        <Link to="/products/skincare-wellness" className="flex items-center text-sm font-medium py-2">
           <Tag className="h-4 w-4 mr-2" />
-          <span>Offers</span>
-        </a>
-        <a href="#" className="flex items-center text-sm font-medium py-2">
+          <span>Skincare</span>
+        </Link>
+        <Link to="#" className="flex items-center text-sm font-medium py-2">
           <Clipboard className="h-4 w-4 mr-2" />
           <span>My Orders</span>
-        </a>
-        <a href="#" className="flex items-center text-sm font-medium py-2">
+        </Link>
+        <Link to="#" className="flex items-center text-sm font-medium py-2">
           <MapPin className="h-4 w-4 mr-2" />
           <span>Set Location</span>
-        </a>
-        <a href="#" className="flex items-center text-sm font-medium py-2">
+        </Link>
+        <Link to="#" className="flex items-center text-sm font-medium py-2">
           <User className="h-4 w-4 mr-2" />
           <span>Account</span>
-        </a>
-        <a href="#" className="flex items-center text-sm font-medium py-2">
+        </Link>
+        <Link to="#" className="flex items-center text-sm font-medium py-2">
           <ShoppingCart className="h-4 w-4 mr-2" />
           <span>Cart</span>
-        </a>
+        </Link>
       </nav>
     </div>
   );
