@@ -1,6 +1,6 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { User } from '@supabase/supabase-js';
 
 // Define the interface for profile data
 export interface ProfileData {
@@ -12,9 +12,17 @@ export interface ProfileData {
   updated_at: string;
 }
 
+// Define the return type for the auth service
+export interface AuthServiceReturn {
+  signIn: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string, fullName: string) => Promise<void>;
+  signOut: () => Promise<void>;
+  fetchProfile: (userId: string) => Promise<ProfileData | null>;
+}
+
 // Auth service hook that encapsulates authentication functionality
-export const useAuthService = (navigate: (path: string) => void) => {
-  const signIn = async (email: string, password: string) => {
+export const useAuthService = (navigate: (path: string) => void): AuthServiceReturn => {
+  const signIn = async (email: string, password: string): Promise<void> => {
     try {
       const { error } = await supabase.auth.signInWithPassword({ 
         email, 
@@ -118,7 +126,7 @@ export const useAuthService = (navigate: (path: string) => void) => {
     }
   };
 
-  const signOut = async () => {
+  const signOut = async (): Promise<void> => {
     try {
       await supabase.auth.signOut();
       toast({
