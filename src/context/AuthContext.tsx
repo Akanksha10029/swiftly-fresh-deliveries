@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { Session, User } from '@supabase/supabase-js';
 import { toast } from '@/hooks/use-toast';
 
+// Define simpler, non-recursive types
 type AuthContextType = {
   session: Session | null;
   user: User | null;
@@ -204,19 +205,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Create auth context value object without direct circular references
+  const authContextValue: AuthContextType = {
+    session,
+    user,
+    profile,
+    signIn,
+    signUp,
+    signOut,
+    loading,
+    isAuthenticated: !!user,
+  };
+
   return (
-    <AuthContext.Provider
-      value={{
-        session,
-        user,
-        profile,
-        signIn,
-        signUp,
-        signOut,
-        loading,
-        isAuthenticated: !!user,
-      }}
-    >
+    <AuthContext.Provider value={authContextValue}>
       {children}
     </AuthContext.Provider>
   );
