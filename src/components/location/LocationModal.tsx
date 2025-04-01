@@ -1,14 +1,16 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { MapPin, Plus, Search } from 'lucide-react';
+import { MapPin, Plus, Search, X, Loader2 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command';
 
 // This is a publishable token, it's safe to include in the client-side code
 mapboxgl.accessToken = 'pk.eyJ1IjoibG92YWJsZXRlc3QiLCJhIjoiY2x0amM5c2hoMDJ4azJqbjA5aGE4ZXR4ZyJ9.O0HQkoiZoOt5nAEpJK-9ow';
@@ -17,6 +19,13 @@ interface LocationModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSelectLocation: (location: string) => void;
+}
+
+interface PlaceSuggestion {
+  place_id: string;
+  description: string;
+  main_text: string;
+  secondary_text: string;
 }
 
 const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelectLocation }) => {
@@ -31,6 +40,9 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<mapboxgl.Map | null>(null);
   const marker = useRef<mapboxgl.Marker | null>(null);
+  const [suggestions, setSuggestions] = useState<PlaceSuggestion[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [selectedSuggestion, setSelectedSuggestion] = useState<PlaceSuggestion | null>(null);
 
   useEffect(() => {
     if (isAuthenticated && isOpen) {
@@ -180,11 +192,63 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
     onClose();
   };
 
-  const handleSearchAddress = () => {
-    if (newLocation) {
-      fetchCoordinatesFromAddress(newLocation);
+  const fetchLocationSuggestions = async (query: string) => {
+    if (!query || query.length < 3) {
+      setSuggestions([]);
+      return;
+    }
+    
+    setIsSearching(true);
+    try {
+      const response = await fetch(
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=${mapboxgl.accessToken}&types=address,place,neighborhood,locality,district&country=in&autocomplete=true&limit=5`
+      );
+      const data = await response.json();
+      
+      if (data && data.features) {
+        const placeSuggestions: PlaceSuggestion[] = data.features.map((feature: any) => {
+          const mainText = feature.text || '';
+          const secondaryText = feature.place_name.replace(mainText + ', ', '') || '';
+          
+          return {
+            place_id: feature.id,
+            description: feature.place_name,
+            main_text: mainText,
+            secondary_text: secondaryText
+          };
+        });
+        
+        setSuggestions(placeSuggestions);
+      }
+    } catch (error) {
+      console.error('Error fetching location suggestions:', error);
+    } finally {
+      setIsSearching(false);
     }
   };
+
+  const handleSelectSuggestion = (suggestion: PlaceSuggestion) => {
+    setNewLocation(suggestion.description);
+    setSuggestions([]);
+    setSelectedSuggestion(suggestion);
+    fetchCoordinatesFromAddress(suggestion.description);
+  };
+
+  const handleLocationInputChange = (value: string) => {
+    setNewLocation(value);
+    fetchLocationSuggestions(value);
+  };
+
+  // Debounce the search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (newLocation) {
+        fetchLocationSuggestions(newLocation);
+      }
+    }, 300);
+    
+    return () => clearTimeout(timer);
+  }, [newLocation]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -199,7 +263,10 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
         {isAuthenticated ? (
           <div className="space-y-4">
             {isLoading ? (
-              <div className="text-center py-4">Loading locations...</div>
+              <div className="text-center py-4 flex items-center justify-center">
+                <Loader2 className="h-6 w-6 animate-spin mr-2" />
+                <span>Loading locations...</span>
+              </div>
             ) : (
               <>
                 {locations.map((location) => (
@@ -229,15 +296,64 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
                       placeholder="Location name (e.g. Home, Work)"
                       className="mb-2"
                     />
-                    <div className="flex gap-2">
-                      <Input
-                        value={newLocation}
-                        onChange={(e) => setNewLocation(e.target.value)}
-                        placeholder="Enter your address"
-                      />
-                      <Button size="icon" onClick={handleSearchAddress}>
-                        <Search className="h-4 w-4" />
-                      </Button>
+                    <div className="relative">
+                      <div className="flex gap-2">
+                        <Input
+                          value={newLocation}
+                          onChange={(e) => handleLocationInputChange(e.target.value)}
+                          placeholder="Enter your address"
+                          className="flex-1"
+                        />
+                        {newLocation && (
+                          <Button 
+                            size="icon" 
+                            variant="ghost" 
+                            className="absolute right-12 top-0"
+                            onClick={() => {
+                              setNewLocation('');
+                              setSuggestions([]);
+                            }}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        )}
+                        <Button size="icon" onClick={() => fetchCoordinatesFromAddress(newLocation)}>
+                          <Search className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      
+                      {suggestions.length > 0 && (
+                        <div className="absolute w-full z-10 mt-1 bg-white rounded-md shadow-lg border">
+                          <Command>
+                            <CommandGroup>
+                              {suggestions.map((suggestion) => (
+                                <CommandItem
+                                  key={suggestion.place_id}
+                                  onSelect={() => handleSelectSuggestion(suggestion)}
+                                  className="cursor-pointer p-2"
+                                >
+                                  <MapPin className="h-4 w-4 mr-2 text-primary" />
+                                  <div>
+                                    <p className="font-medium">{suggestion.main_text}</p>
+                                    <p className="text-sm text-gray-500">{suggestion.secondary_text}</p>
+                                  </div>
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                            {isSearching && (
+                              <div className="flex items-center justify-center p-2">
+                                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                <span className="text-sm">Searching...</span>
+                              </div>
+                            )}
+                            {!isSearching && suggestions.length === 0 && newLocation.length >= 3 && (
+                              <div className="p-2 text-center text-sm text-gray-500">
+                                No locations found
+                              </div>
+                            )}
+                          </Command>
+                        </div>
+                      )}
                     </div>
                     <Button 
                       variant="outline" 
@@ -252,6 +368,7 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
                       <Button variant="outline" onClick={() => {
                         setIsAdding(false);
                         setShowMap(false);
+                        setSuggestions([]);
                       }}>Cancel</Button>
                     </div>
                   </div>
@@ -270,11 +387,48 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
           </div>
         ) : (
           <div className="space-y-4">
-            <Input
-              value={newLocation}
-              onChange={(e) => setNewLocation(e.target.value)}
-              placeholder="Enter your address"
-            />
+            <div className="relative">
+              <Input
+                value={newLocation}
+                onChange={(e) => handleLocationInputChange(e.target.value)}
+                placeholder="Enter your address"
+              />
+              {suggestions.length > 0 && (
+                <div className="absolute w-full z-10 mt-1 bg-white rounded-md shadow-lg border">
+                  <Command>
+                    <CommandGroup>
+                      {suggestions.map((suggestion) => (
+                        <CommandItem
+                          key={suggestion.place_id}
+                          onSelect={() => handleSelectSuggestion(suggestion)}
+                          className="cursor-pointer p-2"
+                        >
+                          <MapPin className="h-4 w-4 mr-2 text-primary" />
+                          <div>
+                            <p className="font-medium">{suggestion.main_text}</p>
+                            <p className="text-sm text-gray-500">{suggestion.secondary_text}</p>
+                          </div>
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                    {isSearching && (
+                      <div className="flex items-center justify-center p-2">
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        <span className="text-sm">Searching...</span>
+                      </div>
+                    )}
+                  </Command>
+                </div>
+              )}
+            </div>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowMap(true)}
+              className="flex items-center gap-2 w-full"
+            >
+              <MapPin className="h-4 w-4" />
+              Select on map
+            </Button>
             <Button onClick={() => handleSelectLocation(newLocation)}>Confirm Location</Button>
           </div>
         )}

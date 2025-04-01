@@ -76,7 +76,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signIn = async (email: string, password: string) => {
     try {
       setLoading(true);
-      // Removed expiresIn option as it's not supported in this version
       const { error } = await supabase.auth.signInWithPassword({ 
         email, 
         password
@@ -98,7 +97,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         description: error.message,
         variant: "destructive",
       });
-      throw error; // Re-throw the error for the component to handle
+      throw error;
     } finally {
       setLoading(false);
     }
@@ -107,6 +106,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signUp = async (email: string, password: string, fullName: string) => {
     try {
       setLoading(true);
+      
+      // Email validation with a more permissive regex
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        throw new Error('Please enter a valid email address');
+      }
+      
       // First check if user already exists
       const { data: existingUsers, error: searchError } = await supabase
         .from('profiles')
@@ -128,7 +134,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
       
-      // Register new user with user metadata but without expiresIn
+      // Register new user with user metadata
       const { data, error } = await supabase.auth.signUp({ 
         email, 
         password,
@@ -172,7 +178,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         description: error.message,
         variant: "destructive",
       });
-      throw error; // Re-throw the error for the component to handle
+      throw error;
     } finally {
       setLoading(false);
     }

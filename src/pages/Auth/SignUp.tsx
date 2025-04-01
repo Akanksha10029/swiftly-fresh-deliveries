@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Loader2 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const formSchema = z.object({
@@ -39,6 +39,14 @@ const SignUp = () => {
 
   const onSubmit = async (values: FormValues) => {
     setErrorMessage(null);
+    
+    // Email validation with permissive regex
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(values.email)) {
+      setErrorMessage('Please enter a valid email address');
+      return;
+    }
+    
     try {
       await signUp(values.email, values.password, values.fullName);
     } catch (error: any) {
@@ -141,7 +149,12 @@ const SignUp = () => {
               className="w-full"
               disabled={loading}
             >
-              {loading ? 'Creating account...' : 'Create account'}
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Creating account...
+                </>
+              ) : 'Create account'}
             </Button>
           </form>
         </Form>
