@@ -1,6 +1,5 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { User, Session } from '@supabase/supabase-js';
 import { toast } from '@/hooks/use-toast';
 
 // Define the interface for profile data
@@ -136,7 +135,7 @@ export const useAuthService = (navigate: (path: string) => void) => {
     }
   };
 
-  const fetchProfile = async (userId: string) => {
+  const fetchProfile = async (userId: string): Promise<ProfileData | null> => {
     const { data } = await supabase
       .from('profiles')
       .select('*')

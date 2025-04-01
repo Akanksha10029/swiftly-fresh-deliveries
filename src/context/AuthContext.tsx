@@ -97,8 +97,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Create a simple value object to avoid recursive types
-  const authContextValue = {
+  // Create the context value object with explicit type annotation
+  const authContextValue: AuthContextType = {
     session,
     user,
     profile,
