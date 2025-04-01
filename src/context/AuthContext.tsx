@@ -15,7 +15,7 @@ interface ProfileData {
   updated_at: string;
 }
 
-// Define the auth context type
+// Define the auth context type with explicit types
 interface AuthContextType {
   session: Session | null;
   user: User | null;
@@ -27,7 +27,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
 }
 
-// Create context with a default value
+// Create the context with undefined as the default value
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -216,8 +216,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Create the context value object
-  const contextValue: AuthContextType = {
+  // Create a value object with explicit type annotation to avoid deep type inference
+  const value: AuthContextType = {
     session,
     user,
     profile,
@@ -229,7 +229,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={contextValue}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
