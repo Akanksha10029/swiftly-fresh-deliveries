@@ -3,17 +3,7 @@ import React, { createContext, useState, useEffect, useContext } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { Session, User } from '@supabase/supabase-js';
-import { toast } from '@/hooks/use-toast';
-
-// Define the interface for profile data
-interface ProfileData {
-  id: string;
-  full_name: string | null;
-  address: string | null;
-  phone: string | null;
-  created_at: string;
-  updated_at: string;
-}
+import { ProfileData, useAuthService } from '@/hooks/use-auth-service';
 
 // Define the auth context type with explicit types
 interface AuthContextType {
@@ -36,6 +26,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const authService = useAuthService(navigate);
 
   useEffect(() => {
     // Set up auth state listener FIRST
@@ -45,13 +36,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(newSession?.user ?? null);
         
         if (newSession?.user) {
-          const { data } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', newSession.user.id)
-            .single();
-          
-          setProfile(data);
+          // Using setTimeout to avoid recursive Supabase calls
+          setTimeout(async () => {
+            const profileData = await authService.fetchProfile(newSession.user.id);
+            setProfile(profileData);
+          }, 0);
         } else {
           setProfile(null);
         }
@@ -66,15 +55,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(initialSession?.user ?? null);
       
       if (initialSession?.user) {
-        supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', initialSession.user.id)
-          .single()
-          .then(({ data }) => {
-            setProfile(data);
-            setLoading(false);
-          });
+        authService.fetchProfile(initialSession.user.id).then((data) => {
+          setProfile(data);
+          setLoading(false);
+        });
       } else {
         setLoading(false);
       }
@@ -85,146 +69,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
-  // Define sign in function outside of the context value to avoid circular references
-  const signIn = async (email: string, password: string) => {
+  // Handle sign-in, sign-up, and sign-out with loading state management
+  const handleSignIn = async (email: string, password: string) => {
+    setLoading(true);
     try {
-      setLoading(true);
-      const { error } = await supabase.auth.signInWithPassword({ 
-        email, 
-        password
-      });
-      
-      if (error) {
-        throw error;
-      }
-      
-      toast({
-        title: "Success",
-        description: "You have been signed in",
-      });
-      
-      navigate('/');
-    } catch (error: any) {
-      toast({
-        title: "Error signing in",
-        description: error.message,
-        variant: "destructive",
-      });
-      throw error;
+      await authService.signIn(email, password);
     } finally {
       setLoading(false);
     }
   };
 
-  const signUp = async (email: string, password: string, fullName: string) => {
+  const handleSignUp = async (email: string, password: string, fullName: string) => {
+    setLoading(true);
     try {
-      setLoading(true);
-      
-      // Email validation with a more permissive regex
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(email)) {
-        throw new Error('Please enter a valid email address');
-      }
-      
-      // First check if user already exists
-      const { data: existingUsers, error: searchError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('email', email);
-      
-      if (searchError) {
-        console.error('Error checking existing user:', searchError);
-      }
-      
-      if (existingUsers && existingUsers.length > 0) {
-        // User exists, try to sign them in instead
-        toast({
-          title: "Account exists",
-          description: "This email is already registered. Trying to sign you in...",
-        });
-        
-        await signIn(email, password);
-        return;
-      }
-      
-      // Register new user with user metadata
-      const { data, error } = await supabase.auth.signUp({
-        email, 
-        password,
-        options: {
-          data: {
-            full_name: fullName,
-          }
-        }
-      });
-      
-      if (error) {
-        throw error;
-      }
-      
-      if (data.session) {
-        // User is automatically signed in
-        toast({
-          title: "Success",
-          description: "Your account has been created and you are now signed in.",
-        });
-        
-        // Insert into chat history for first-time users
-        await supabase.from('chat_history').insert({
-          user_id: data.user!.id,
-          message: "Welcome to our platform! How can I assist you today?",
-          is_ai: true
-        });
-        
-        navigate('/');
-      } else {
-        toast({
-          title: "Account created",
-          description: "Please check your email for verification.",
-        });
-        
-        navigate('/auth/signin');
-      }
-    } catch (error: any) {
-      toast({
-        title: "Error signing up",
-        description: error.message,
-        variant: "destructive",
-      });
-      throw error;
+      await authService.signUp(email, password, fullName);
     } finally {
       setLoading(false);
     }
   };
 
-  const signOut = async () => {
+  const handleSignOut = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      await supabase.auth.signOut();
-      toast({
-        title: "Success",
-        description: "You have been signed out",
-      });
-      navigate('/');
-    } catch (error: any) {
-      toast({
-        title: "Error signing out",
-        description: error.message,
-        variant: "destructive",
-      });
+      await authService.signOut();
     } finally {
       setLoading(false);
     }
   };
 
-  // Explicitly define the value object with proper type annotation
-  const authContextValue: AuthContextType = {
+  // Create a simple value object to avoid recursive types
+  const authContextValue = {
     session,
     user,
     profile,
-    signIn,
-    signUp,
-    signOut,
+    signIn: handleSignIn,
+    signUp: handleSignUp,
+    signOut: handleSignOut,
     loading,
     isAuthenticated: !!user,
   };
