@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useDebounce } from '@/hooks/useDebounce';
-import { allProducts as products } from '@/data/products';
+import { allProducts } from '@/data/products';
 
 export const NavigationSearchBar = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -36,10 +35,9 @@ export const NavigationSearchBar = () => {
 
   const performSearch = (term: string) => {
     // Search the imported products data
-    const results = products
+    const results = allProducts
       .filter(product => 
         product.name.toLowerCase().includes(term.toLowerCase()) ||
-        product.description.toLowerCase().includes(term.toLowerCase()) ||
         product.category.toLowerCase().includes(term.toLowerCase())
       )
       .slice(0, 5); // Limit to 5 results

@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useContext, ReactNode, useEffect } from 'react';
 import { toast } from '@/hooks/use-toast';
 
@@ -13,6 +14,7 @@ export type CartItem = {
 
 type CartContextType = {
   cartItems: CartItem[];
+  setCartItems: React.Dispatch<React.SetStateAction<CartItem[]>>;
   addToCart: (product: any) => void;
   removeFromCart: (productId: string) => void;
   increaseQuantity: (productId: string) => void;
@@ -107,7 +109,8 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   return (
     <CartContext.Provider 
       value={{ 
-        cartItems, 
+        cartItems,
+        setCartItems,
         addToCart, 
         removeFromCart, 
         increaseQuantity, 
