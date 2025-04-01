@@ -1,28 +1,37 @@
-
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { Session, User } from '@supabase/supabase-js';
 import { toast } from '@/hooks/use-toast';
 
+// Define the interface for profile data
+interface ProfileData {
+  id: string;
+  full_name: string | null;
+  address: string | null;
+  phone: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 // Define simpler, non-recursive types
-type AuthContextType = {
+interface AuthContextType {
   session: Session | null;
   user: User | null;
-  profile: any | null;
+  profile: ProfileData | null;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, fullName: string) => Promise<void>;
   signOut: () => Promise<void>;
   loading: boolean;
   isAuthenticated: boolean;
-};
+}
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<any | null>(null);
+  const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -205,8 +214,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Create auth context value object without direct circular references
-  const authContextValue: AuthContextType = {
+  // Create auth context value object with explicit type to avoid circular references
+  const contextValue: AuthContextType = {
     session,
     user,
     profile,
@@ -218,7 +227,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={authContextValue}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );
