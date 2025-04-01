@@ -1,3 +1,4 @@
+
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
@@ -14,7 +15,7 @@ interface ProfileData {
   updated_at: string;
 }
 
-// Define simpler, non-recursive types
+// Define the context type
 interface AuthContextType {
   session: Session | null;
   user: User | null;
@@ -26,6 +27,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
 }
 
+// Create the context with undefined as initial value
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -214,8 +216,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Create auth context value object with explicit type to avoid circular references
-  const contextValue: AuthContextType = {
+  // Create the value object without creating circular references
+  const value: AuthContextType = {
     session,
     user,
     profile,
@@ -227,7 +229,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={contextValue}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
