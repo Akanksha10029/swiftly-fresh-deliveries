@@ -135,7 +135,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       // Register new user with user metadata
-      const { data, error } = await supabase.auth.signUp({ 
+      const { data, error } = await supabase.auth.signUp({
         email, 
         password,
         options: {
