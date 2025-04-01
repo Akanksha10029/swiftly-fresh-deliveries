@@ -1,12 +1,18 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { MapPin, Plus } from 'lucide-react';
+import { MapPin, Plus, Search } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import mapboxgl from 'mapbox-gl';
+import 'mapbox-gl/dist/mapbox-gl.css';
+
+// This is a publishable token, it's safe to include in the client-side code
+mapboxgl.accessToken = 'pk.eyJ1IjoibG92YWJsZXRlc3QiLCJhIjoiY2x0amM5c2hoMDJ4azJqbjA5aGE4ZXR4ZyJ9.O0HQkoiZoOt5nAEpJK-9ow';
 
 interface LocationModalProps {
   isOpen: boolean;
@@ -18,14 +24,58 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
   const { user, isAuthenticated } = useAuth();
   const [locations, setLocations] = useState<any[]>([]);
   const [newLocation, setNewLocation] = useState('');
+  const [newLocationName, setNewLocationName] = useState('Home');
   const [isAdding, setIsAdding] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showMap, setShowMap] = useState(false);
+  const [mapCoordinates, setMapCoordinates] = useState<[number, number]>([77.2090, 28.6139]); // Default: Delhi
+  const mapContainer = useRef<HTMLDivElement>(null);
+  const mapInstance = useRef<mapboxgl.Map | null>(null);
+  const marker = useRef<mapboxgl.Marker | null>(null);
 
   useEffect(() => {
     if (isAuthenticated && isOpen) {
       fetchLocations();
     }
   }, [isAuthenticated, isOpen]);
+
+  useEffect(() => {
+    if (showMap && mapContainer.current) {
+      // Initialize map
+      mapInstance.current = new mapboxgl.Map({
+        container: mapContainer.current,
+        style: 'mapbox://styles/mapbox/streets-v11',
+        center: mapCoordinates,
+        zoom: 13
+      });
+
+      // Add navigation controls
+      mapInstance.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+
+      // Add marker at center
+      marker.current = new mapboxgl.Marker({ draggable: true })
+        .setLngLat(mapCoordinates)
+        .addTo(mapInstance.current);
+
+      // When marker is dragged, update coordinates
+      marker.current.on('dragend', () => {
+        if (marker.current) {
+          const lngLat = marker.current.getLngLat();
+          setMapCoordinates([lngLat.lng, lngLat.lat]);
+          // Update the address using reverse geocoding
+          fetchAddressFromCoordinates(lngLat.lng, lngLat.lat);
+        }
+      });
+
+      // Cleanup
+      return () => {
+        if (mapInstance.current) {
+          mapInstance.current.remove();
+          mapInstance.current = null;
+        }
+      };
+    }
+  }, [showMap]);
 
   const fetchLocations = async () => {
     setIsLoading(true);
@@ -50,6 +100,46 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
     }
   };
 
+  const fetchAddressFromCoordinates = async (lng: number, lat: number) => {
+    try {
+      const response = await fetch(
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${mapboxgl.accessToken}`
+      );
+      const data = await response.json();
+      
+      if (data && data.features && data.features.length > 0) {
+        setNewLocation(data.features[0].place_name);
+      }
+    } catch (error) {
+      console.error('Error fetching address:', error);
+    }
+  };
+
+  const fetchCoordinatesFromAddress = async (address: string) => {
+    try {
+      const response = await fetch(
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(address)}.json?access_token=${mapboxgl.accessToken}`
+      );
+      const data = await response.json();
+      
+      if (data && data.features && data.features.length > 0) {
+        const coordinates = data.features[0].center;
+        setMapCoordinates([coordinates[0], coordinates[1]]);
+        
+        // Update marker position
+        if (mapInstance.current && marker.current) {
+          marker.current.setLngLat([coordinates[0], coordinates[1]]);
+          mapInstance.current.flyTo({
+            center: [coordinates[0], coordinates[1]],
+            zoom: 15
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching coordinates:', error);
+    }
+  };
+
   const addLocation = async () => {
     if (!newLocation.trim()) return;
     
@@ -59,7 +149,7 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
         .insert([
           {
             user_id: user?.id,
-            name: 'Home',
+            name: newLocationName,
             address: newLocation,
             is_default: locations.length === 0,
           },
@@ -73,7 +163,9 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
       });
       
       setNewLocation('');
+      setNewLocationName('Home');
       setIsAdding(false);
+      setShowMap(false);
       fetchLocations();
     } catch (error: any) {
       toast({
@@ -87,6 +179,12 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
   const handleSelectLocation = (address: string) => {
     onSelectLocation(address);
     onClose();
+  };
+
+  const handleSearchAddress = () => {
+    if (newLocation) {
+      fetchCoordinatesFromAddress(newLocation);
+    }
   };
 
   return (
@@ -127,13 +225,35 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
                 {isAdding ? (
                   <div className="flex flex-col space-y-2">
                     <Input
-                      value={newLocation}
-                      onChange={(e) => setNewLocation(e.target.value)}
-                      placeholder="Enter your address"
+                      value={newLocationName}
+                      onChange={(e) => setNewLocationName(e.target.value)}
+                      placeholder="Location name (e.g. Home, Work)"
+                      className="mb-2"
                     />
-                    <div className="flex space-x-2">
+                    <div className="flex gap-2">
+                      <Input
+                        value={newLocation}
+                        onChange={(e) => setNewLocation(e.target.value)}
+                        placeholder="Enter your address"
+                      />
+                      <Button size="icon" onClick={handleSearchAddress}>
+                        <Search className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setShowMap(true)}
+                      className="flex items-center gap-2"
+                    >
+                      <MapPin className="h-4 w-4" />
+                      Select on map
+                    </Button>
+                    <div className="flex space-x-2 mt-2">
                       <Button onClick={addLocation}>Save</Button>
-                      <Button variant="outline" onClick={() => setIsAdding(false)}>Cancel</Button>
+                      <Button variant="outline" onClick={() => {
+                        setIsAdding(false);
+                        setShowMap(false);
+                      }}>Cancel</Button>
                     </div>
                   </div>
                 ) : (
@@ -160,6 +280,27 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
           </div>
         )}
       </DialogContent>
+
+      {/* Map Sheet */}
+      <Sheet open={showMap} onOpenChange={setShowMap}>
+        <SheetContent className="w-full sm:max-w-none md:max-w-xl" side="bottom" size="content">
+          <SheetHeader>
+            <SheetTitle>Select location on map</SheetTitle>
+            <SheetDescription>Drag the pin to set your exact location</SheetDescription>
+          </SheetHeader>
+          <div className="mt-4">
+            <div ref={mapContainer} className="w-full h-[400px] rounded-md border" />
+            <div className="mt-4 text-sm">
+              <p className="font-medium">Selected address:</p>
+              <p className="text-muted-foreground">{newLocation}</p>
+            </div>
+            <div className="flex gap-2 mt-4">
+              <Button onClick={() => setShowMap(false)}>Confirm location</Button>
+              <Button variant="outline" onClick={() => setShowMap(false)}>Cancel</Button>
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
     </Dialog>
   );
 };

@@ -8,6 +8,8 @@ import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const formSchema = z.object({
   fullName: z.string().min(2, { message: 'Please enter your full name' }),
@@ -23,6 +25,7 @@ type FormValues = z.infer<typeof formSchema>;
 
 const SignUp = () => {
   const { signUp, loading } = useAuth();
+  const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
   
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -35,7 +38,12 @@ const SignUp = () => {
   });
 
   const onSubmit = async (values: FormValues) => {
-    await signUp(values.email, values.password, values.fullName);
+    setErrorMessage(null);
+    try {
+      await signUp(values.email, values.password, values.fullName);
+    } catch (error: any) {
+      setErrorMessage(error.message);
+    }
   };
 
   return (
@@ -50,6 +58,15 @@ const SignUp = () => {
             </Link>
           </p>
         </div>
+        
+        {errorMessage && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{errorMessage}</AlertDescription>
+          </Alert>
+        )}
+        
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="mt-8 space-y-6">
             <FormField

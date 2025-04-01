@@ -76,7 +76,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signIn = async (email: string, password: string) => {
     try {
       setLoading(true);
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { error } = await supabase.auth.signInWithPassword({ 
+        email, 
+        password,
+        options: {
+          // Set session expiry to 2 hours (7200 seconds)
+          expiresIn: 7200
+        }
+      });
       
       if (error) {
         throw error;
@@ -102,13 +109,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signUp = async (email: string, password: string, fullName: string) => {
     try {
       setLoading(true);
-      const { error } = await supabase.auth.signUp({ 
+      // First check if user already exists
+      const { data: existingUsers, error: searchError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', email);
+      
+      if (searchError) {
+        console.error('Error checking existing user:', searchError);
+      }
+      
+      if (existingUsers && existingUsers.length > 0) {
+        // User exists, try to sign them in instead
+        toast({
+          title: "Account exists",
+          description: "This email is already registered. Trying to sign you in...",
+        });
+        
+        await signIn(email, password);
+        return;
+      }
+      
+      // Register new user
+      const { data, error } = await supabase.auth.signUp({ 
         email, 
         password,
         options: {
           data: {
             full_name: fullName,
-          }
+          },
+          // Set session expiry to 2 hours (7200 seconds)
+          expiresIn: 7200
         }
       });
       
@@ -116,12 +147,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw error;
       }
       
-      toast({
-        title: "Success",
-        description: "Account created successfully. Please check your email for verification.",
-      });
-      
-      navigate('/auth/signin');
+      if (data.session) {
+        // User is automatically signed in
+        toast({
+          title: "Success",
+          description: "Your account has been created and you are now signed in.",
+        });
+        
+        // Insert into chat history for first-time users
+        await supabase.from('chat_history').insert({
+          user_id: data.user!.id,
+          message: "Welcome to our platform! How can I assist you today?",
+          is_ai: true
+        });
+        
+        navigate('/');
+      } else {
+        toast({
+          title: "Account created",
+          description: "Please check your email for verification.",
+        });
+        
+        navigate('/auth/signin');
+      }
     } catch (error: any) {
       toast({
         title: "Error signing up",
