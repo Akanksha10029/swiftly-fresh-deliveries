@@ -85,6 +85,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
+  // Define sign in function outside of the context value to avoid circular references
   const signIn = async (email: string, password: string) => {
     try {
       setLoading(true);
@@ -216,8 +217,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Create a value object with explicit type annotation to avoid deep type inference
-  const value: AuthContextType = {
+  // Explicitly define the value object with proper type annotation
+  const authContextValue: AuthContextType = {
     session,
     user,
     profile,
@@ -229,7 +230,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider value={authContextValue}>
       {children}
     </AuthContext.Provider>
   );
