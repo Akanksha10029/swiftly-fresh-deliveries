@@ -76,13 +76,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signIn = async (email: string, password: string) => {
     try {
       setLoading(true);
+      // Removed expiresIn option as it's not supported in this version
       const { error } = await supabase.auth.signInWithPassword({ 
         email, 
-        password,
-        options: {
-          // Set session expiry to 2 hours (7200 seconds)
-          expiresIn: 7200
-        }
+        password
       });
       
       if (error) {
@@ -101,6 +98,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         description: error.message,
         variant: "destructive",
       });
+      throw error; // Re-throw the error for the component to handle
     } finally {
       setLoading(false);
     }
@@ -130,16 +128,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
       
-      // Register new user
+      // Register new user with user metadata but without expiresIn
       const { data, error } = await supabase.auth.signUp({ 
         email, 
         password,
         options: {
           data: {
             full_name: fullName,
-          },
-          // Set session expiry to 2 hours (7200 seconds)
-          expiresIn: 7200
+          }
         }
       });
       
@@ -176,6 +172,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         description: error.message,
         variant: "destructive",
       });
+      throw error; // Re-throw the error for the component to handle
     } finally {
       setLoading(false);
     }

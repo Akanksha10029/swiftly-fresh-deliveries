@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -281,9 +280,8 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
         )}
       </DialogContent>
 
-      {/* Map Sheet */}
       <Sheet open={showMap} onOpenChange={setShowMap}>
-        <SheetContent className="w-full sm:max-w-none md:max-w-xl" side="bottom" size="content">
+        <SheetContent className="w-full sm:max-w-none md:max-w-xl" side="bottom">
           <SheetHeader>
             <SheetTitle>Select location on map</SheetTitle>
             <SheetDescription>Drag the pin to set your exact location</SheetDescription>
