@@ -15,7 +15,7 @@ interface ProfileData {
   updated_at: string;
 }
 
-// Define the context type
+// Define the context type explicitly without circular references
 interface AuthContextType {
   session: Session | null;
   user: User | null;
@@ -27,7 +27,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
 }
 
-// Create the context with undefined as initial value
+// Create context with a default undefined value
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -216,8 +216,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Create the value object without creating circular references
-  const value: AuthContextType = {
+  // Explicitly construct the context value as a separate object
+  // to avoid the circular reference issue
+  const authContextValue: AuthContextType = {
     session,
     user,
     profile,
@@ -229,7 +230,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider value={authContextValue}>
       {children}
     </AuthContext.Provider>
   );
