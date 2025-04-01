@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import Navigation from '@/components/Navigation';
@@ -11,7 +12,7 @@ import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbS
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useCart } from '@/context/CartContext';
+import { useCart, CartItem } from '@/context/CartContext';
 
 type OrderWithItems = {
   id: string;
@@ -106,14 +107,18 @@ const Orders = () => {
 
   const handleReorder = async (orderItems: any[]) => {
     try {
-      // Add all items to cart
-      setCartItems(orderItems.map(item => ({
+      // Add all items to cart with the required productQuantity property
+      const cartItems: CartItem[] = orderItems.map(item => ({
         id: item.product_id,
         name: item.product_name,
         price: item.price,
         quantity: item.quantity,
-        image: '/placeholder.svg' // Using placeholder as we don't store image in order_items
-      })));
+        image: '/placeholder.svg', // Using placeholder as we don't store image in order_items
+        productQuantity: "1 unit", // Adding default productQuantity as it's required by CartItem type
+        deliveryTime: "9 minutes" // Adding a default deliveryTime
+      }));
+      
+      setCartItems(cartItems);
       
       toast({
         title: "Items added to cart",
