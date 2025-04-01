@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Search, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useDebounce } from '@/hooks/useDebounce';
-import { products } from '@/data/products';
+import { allProducts as products } from '@/data/products';
 
 export const NavigationSearchBar = () => {
   const [searchTerm, setSearchTerm] = useState('');

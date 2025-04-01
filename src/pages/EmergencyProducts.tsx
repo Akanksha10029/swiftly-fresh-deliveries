@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 import { Link } from 'react-router-dom';
 import { useCart } from '@/context/CartContext';
-import { products } from '@/data/products';
+import { allProducts as products } from '@/data/products';
 
 const EmergencyProducts = () => {
   const { addToCart } = useCart();
@@ -24,11 +24,11 @@ const EmergencyProducts = () => {
       <Breadcrumb className="mb-6">
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbLink as={Link} to="/">Home</BreadcrumbLink>
+            <BreadcrumbLink asChild><Link to="/">Home</Link></BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbLink as={Link} to="/products/emergency">Emergency Essentials</BreadcrumbLink>
+            <BreadcrumbLink asChild><Link to="/products/emergency">Emergency Essentials</Link></BreadcrumbLink>
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
