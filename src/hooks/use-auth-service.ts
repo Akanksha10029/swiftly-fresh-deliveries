@@ -102,11 +102,13 @@ export const useAuthService = (navigate: (path: string) => void): AuthServiceRet
         });
         
         // Insert into chat history for first-time users
-        await supabase.from('chat_history').insert({
-          user_id: data.user!.id,
-          message: "Welcome to our platform! How can I assist you today?",
-          is_ai: true
-        });
+        if (data.user) {
+          await supabase.from('chat_history').insert({
+            user_id: data.user.id,
+            message: "Welcome to our platform! How can I assist you today?",
+            is_ai: true
+          });
+        }
         
         navigate('/');
       } else {
@@ -144,18 +146,22 @@ export const useAuthService = (navigate: (path: string) => void): AuthServiceRet
     }
   };
 
-  // Explicitly define the return type to avoid deep type inference issues
   const fetchProfile = async (userId: string): Promise<ProfileData | null> => {
     try {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .single();
       
+      if (error) {
+        console.error('Error fetching profile:', error);
+        return null;
+      }
+      
       return data as ProfileData | null;
     } catch (error) {
-      console.error('Error fetching profile:', error);
+      console.error('Exception fetching profile:', error);
       return null;
     }
   };
