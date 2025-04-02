@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useForm } from 'react-hook-form';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -8,8 +8,6 @@ import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertCircle } from 'lucide-react';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address' }),
@@ -20,7 +18,6 @@ type FormValues = z.infer<typeof formSchema>;
 
 const SignIn = () => {
   const { signIn, loading } = useAuth();
-  const [error, setError] = useState<string | null>(null);
   
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -31,12 +28,7 @@ const SignIn = () => {
   });
 
   const onSubmit = async (values: FormValues) => {
-    setError(null);
-    try {
-      await signIn(values.email, values.password);
-    } catch (err: any) {
-      setError(err.message);
-    }
+    await signIn(values.email, values.password);
   };
 
   return (
@@ -51,15 +43,6 @@ const SignIn = () => {
             </Link>
           </p>
         </div>
-        
-        {error && (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Error</AlertTitle>
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
-        
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="mt-8 space-y-6">
             <FormField

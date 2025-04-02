@@ -3,30 +3,27 @@ import React, { createContext, useState, useEffect, useContext } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 import { Session, User } from '@supabase/supabase-js';
-import { ProfileData, useAuthService } from '@/hooks/use-auth-service';
+import { toast } from '@/hooks/use-toast';
 
-// Define the auth context type with explicit types
-interface AuthContextType {
+type AuthContextType = {
   session: Session | null;
   user: User | null;
-  profile: ProfileData | null;
+  profile: any | null;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, fullName: string) => Promise<void>;
   signOut: () => Promise<void>;
   loading: boolean;
   isAuthenticated: boolean;
-}
+};
 
-// Create the context with undefined as the default value
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<ProfileData | null>(null);
+  const [profile, setProfile] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-  const authService = useAuthService(navigate);
 
   useEffect(() => {
     // Set up auth state listener FIRST
@@ -36,11 +33,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(newSession?.user ?? null);
         
         if (newSession?.user) {
-          // Using setTimeout to avoid recursive Supabase calls
-          setTimeout(async () => {
-            const profileData = await authService.fetchProfile(newSession.user.id);
-            setProfile(profileData);
-          }, 0);
+          const { data } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', newSession.user.id)
+            .single();
+          
+          setProfile(data);
         } else {
           setProfile(null);
         }
@@ -55,10 +54,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(initialSession?.user ?? null);
       
       if (initialSession?.user) {
-        authService.fetchProfile(initialSession.user.id).then((data) => {
-          setProfile(data);
-          setLoading(false);
-        });
+        supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', initialSession.user.id)
+          .single()
+          .then(({ data }) => {
+            setProfile(data);
+            setLoading(false);
+          });
       } else {
         setLoading(false);
       }
@@ -69,48 +73,99 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
-  // Handle sign-in, sign-up, and sign-out with loading state management
-  const handleSignIn = async (email: string, password: string) => {
-    setLoading(true);
+  const signIn = async (email: string, password: string) => {
     try {
-      await authService.signIn(email, password);
+      setLoading(true);
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      
+      if (error) {
+        throw error;
+      }
+      
+      toast({
+        title: "Success",
+        description: "You have been signed in",
+      });
+      
+      navigate('/');
+    } catch (error: any) {
+      toast({
+        title: "Error signing in",
+        description: error.message,
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSignUp = async (email: string, password: string, fullName: string) => {
-    setLoading(true);
+  const signUp = async (email: string, password: string, fullName: string) => {
     try {
-      await authService.signUp(email, password, fullName);
+      setLoading(true);
+      const { error } = await supabase.auth.signUp({ 
+        email, 
+        password,
+        options: {
+          data: {
+            full_name: fullName,
+          }
+        }
+      });
+      
+      if (error) {
+        throw error;
+      }
+      
+      toast({
+        title: "Success",
+        description: "Account created successfully. Please check your email for verification.",
+      });
+      
+      navigate('/auth/signin');
+    } catch (error: any) {
+      toast({
+        title: "Error signing up",
+        description: error.message,
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSignOut = async () => {
-    setLoading(true);
+  const signOut = async () => {
     try {
-      await authService.signOut();
+      setLoading(true);
+      await supabase.auth.signOut();
+      toast({
+        title: "Success",
+        description: "You have been signed out",
+      });
+      navigate('/');
+    } catch (error: any) {
+      toast({
+        title: "Error signing out",
+        description: error.message,
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
-  };
-
-  // Create the context value object with explicit type annotation
-  const authContextValue: AuthContextType = {
-    session,
-    user,
-    profile,
-    signIn: handleSignIn,
-    signUp: handleSignUp,
-    signOut: handleSignOut,
-    loading,
-    isAuthenticated: !!user,
   };
 
   return (
-    <AuthContext.Provider value={authContextValue}>
+    <AuthContext.Provider
+      value={{
+        session,
+        user,
+        profile,
+        signIn,
+        signUp,
+        signOut,
+        loading,
+        isAuthenticated: !!user,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
