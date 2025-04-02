@@ -146,11 +146,8 @@ export const useAuthService = (navigate: (path: string) => void): AuthServiceRet
     }
   };
 
-  // Explicitly define the return type for fetchProfile to avoid type inference issues
+  // Define explicit return type for fetchProfile function
   const fetchProfile = async (userId: string): Promise<ProfileData | null> => {
-    // Use an explicit type assertion for the profile data to prevent deep type inference
-    type ProfileResult = ProfileData;
-    
     try {
       const { data, error } = await supabase
         .from('profiles')
@@ -163,7 +160,8 @@ export const useAuthService = (navigate: (path: string) => void): AuthServiceRet
         return null;
       }
       
-      return data as ProfileResult | null;
+      // Use explicit type assertion with a known interface
+      return data as ProfileData;
     } catch (error) {
       console.error('Exception fetching profile:', error);
       return null;
