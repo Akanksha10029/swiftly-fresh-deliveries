@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { User } from '@supabase/supabase-js';
@@ -49,7 +50,7 @@ export const useAuthService = (navigate: (path: string) => void): AuthServiceRet
     }
   };
 
-  const signUp = async (email: string, password: string, fullName: string) => {
+  const signUp = async (email: string, password: string, fullName: string): Promise<void> => {
     try {
       // Email validation with a more permissive regex
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -143,14 +144,20 @@ export const useAuthService = (navigate: (path: string) => void): AuthServiceRet
     }
   };
 
+  // Explicitly define the return type to avoid deep type inference issues
   const fetchProfile = async (userId: string): Promise<ProfileData | null> => {
-    const { data } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
-    
-    return data as ProfileData | null;
+    try {
+      const { data } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+      
+      return data as ProfileData | null;
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+      return null;
+    }
   };
 
   return {
