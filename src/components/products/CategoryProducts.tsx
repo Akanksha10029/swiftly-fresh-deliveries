@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronRight, Plus, Check, Clock } from 'lucide-react';
@@ -19,18 +18,15 @@ const CategoryProducts: React.FC<CategoryProductsProps> = ({ category }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const productsPerPage = 9;
   
-  // Filter products by category if specified
   const productsToShow = category 
     ? allProducts.filter(product => product.category === category)
     : allProducts;
   
-  // Calculate pagination for a specific category
   const indexOfLastProduct = currentPage * productsPerPage;
   const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
   const currentProducts = productsToShow.slice(indexOfFirstProduct, indexOfLastProduct);
   const totalPages = Math.ceil(productsToShow.length / productsPerPage);
   
-  // Group products by category for the "All Products" view
   const productsByCategory = categories.map(cat => ({
     category: cat,
     products: allProducts.filter(product => product.category === cat.id)
@@ -48,7 +44,6 @@ const CategoryProducts: React.FC<CategoryProductsProps> = ({ category }) => {
   };
 
   if (category) {
-    // If a specific category is selected, show products from just that category with pagination
     const categoryData = categories.find(c => c.id === category);
     
     if (!categoryData) {
@@ -90,7 +85,6 @@ const CategoryProducts: React.FC<CategoryProductsProps> = ({ category }) => {
     );
   }
 
-  // If no specific category is selected, show products grouped by categories
   return (
     <div className="space-y-10">
       {productsByCategory.map(({ category, products }) => {
@@ -141,6 +135,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const [showEmergencyDialog, setShowEmergencyDialog] = useState(false);
   
   const isInCart = cartItems.some(item => item.id === product.id);
+  
+  const isEmergencyInCart = cartItems.some(
+    item => item.id === product.id + '-emergency' || 
+            (item.id === product.id && item.isEmergency)
+  );
   
   const handleAddToCart = () => {
     setIsAdding(true);
@@ -193,7 +192,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                 size="sm"
                 onClick={() => setShowEmergencyDialog(true)}
                 variant="outline"
-                className="rounded-full h-8 w-8 p-0 border-red-500 text-red-500 hover:bg-red-50"
+                className={`rounded-full h-8 w-8 p-0 ${
+                  isEmergencyInCart 
+                    ? "border-red-700 text-red-700 bg-red-50" 
+                    : "border-red-500 text-red-500 hover:bg-red-50"
+                }`}
               >
                 <Clock className="h-4 w-4" />
               </Button>
@@ -201,7 +204,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                 size="sm"
                 onClick={handleAddToCart}
                 variant={isInCart || isAdding ? "default" : "outline"}
-                className={`rounded-full h-8 px-3 ${isInCart || isAdding ? 'bg-green-600 hover:bg-green-700' : 'border-green-600 text-green-600 hover:bg-green-50'}`}
+                className={`rounded-full h-8 px-3 ${
+                  isInCart || isAdding 
+                    ? 'bg-green-600 hover:bg-green-700' 
+                    : 'border-green-600 text-green-600 hover:bg-green-50'
+                }`}
               >
                 {isAdding ? (
                   <Check className="h-4 w-4" />
@@ -238,8 +245,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             <Button variant="outline" onClick={() => setShowEmergencyDialog(false)}>
               Cancel
             </Button>
-            <Button className="bg-red-500 hover:bg-red-600" onClick={handleAddAsEmergency}>
-              Add as Emergency
+            <Button 
+              className={`${isEmergencyInCart ? 'bg-red-700 hover:bg-red-800' : 'bg-red-500 hover:bg-red-600'}`} 
+              onClick={handleAddAsEmergency}
+            >
+              {isEmergencyInCart ? "Already Added" : "Add as Emergency"}
             </Button>
           </DialogFooter>
         </DialogContent>

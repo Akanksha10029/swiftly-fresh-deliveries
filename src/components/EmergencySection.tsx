@@ -11,6 +11,7 @@ const EmergencySection = () => {
   
   // Check if there are any emergency items in the cart
   const hasEmergencyItems = cartItems.some(item => item.isEmergency);
+  const emergencyItemsCount = cartItems.filter(item => item.isEmergency).length;
   
   return (
     <div className="py-8 bg-gradient-to-r from-red-50 to-orange-50">
@@ -53,7 +54,7 @@ const EmergencySection = () => {
                     className="border-red-500 text-red-500 hover:bg-red-50"
                   >
                     <Clock className="h-4 w-4 mr-2" />
-                    {cartItems.filter(item => item.isEmergency).length} Emergency Items in Cart
+                    {emergencyItemsCount} Emergency {emergencyItemsCount === 1 ? 'Item' : 'Items'} in Cart
                   </Button>
                 )}
               </div>
