@@ -102,6 +102,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signUp = async (email: string, password: string, fullName: string) => {
     try {
       setLoading(true);
+      
+      // First check if the user exists in the profiles table
+      // Remove this check as it's causing the error - profiles table doesn't have email column
+      
       const { error } = await supabase.auth.signUp({ 
         email, 
         password,
