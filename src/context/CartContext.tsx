@@ -9,7 +9,8 @@ export type CartItem = {
   quantity: number;
   image: string;
   productQuantity: string; // e.g., "500 ml", "1 kg"
-  deliveryTime?: string; // Added the deliveryTime property as optional
+  deliveryTime?: string; // e.g., "15-30 min"
+  isEmergency?: boolean; // Flag to indicate if this is an emergency product
 };
 
 type CartContextType = {
@@ -44,11 +45,33 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const addToCart = (product: any) => {
     setCartItems(prevItems => {
-      const existingItem = prevItems.find(item => item.id === product.id);
+      // For emergency products, always add as a new item to preserve the emergency flag
+      if (product.isEmergency) {
+        const newItem: CartItem = {
+          id: product.id + (product.isEmergency ? '-emergency' : ''),
+          name: product.name,
+          price: product.price,
+          quantity: 1,
+          image: product.image,
+          productQuantity: product.quantity,
+          deliveryTime: product.deliveryTime || '15-30 min',
+          isEmergency: true
+        };
+        
+        toast({
+          title: "Added emergency item",
+          description: `${product.name} has been added with priority delivery`,
+        });
+        
+        return [...prevItems, newItem];
+      }
+      
+      // Regular product handling (existing logic)
+      const existingItem = prevItems.find(item => item.id === product.id && !item.isEmergency);
       
       if (existingItem) {
         const updatedItems = prevItems.map(item => 
-          item.id === product.id 
+          (item.id === product.id && !item.isEmergency)
             ? { ...item, quantity: item.quantity + 1 } 
             : item
         );
