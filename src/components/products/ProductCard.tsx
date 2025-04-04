@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Plus, Check, Clock, Eye } from 'lucide-react';
+import { Plus, Check, Clock } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/context/CartContext';
@@ -66,24 +66,14 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-110" 
           />
           <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button 
-                    onClick={() => setShowQuickViewDialog(true)}
-                    variant="secondary" 
-                    size="sm" 
-                    className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 hover:bg-white"
-                  >
-                    <Eye className="h-4 w-4 mr-1" />
-                    Quick View
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>View product details</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <Button 
+              onClick={() => setShowQuickViewDialog(true)}
+              variant="secondary" 
+              size="sm" 
+              className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 hover:bg-white rounded-full"
+            >
+              View product details
+            </Button>
           </div>
         </div>
         <CardContent className="p-3 pt-2">
