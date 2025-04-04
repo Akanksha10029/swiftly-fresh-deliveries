@@ -7,7 +7,7 @@ import { useCart } from '@/context/CartContext';
 import { categories } from '@/data/categories';
 import { allProducts } from '@/data/products';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink } from '@/components/ui/pagination';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 
 interface CategoryProductsProps {
   category?: string;
@@ -132,6 +132,7 @@ interface ProductCardProps {
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const { addToCart, cartItems } = useCart();
   const [isAdding, setIsAdding] = useState(false);
+  const [isAddingEmergency, setIsAddingEmergency] = useState(false);
   const [showEmergencyDialog, setShowEmergencyDialog] = useState(false);
   
   const isInCart = cartItems.some(item => item.id === product.id);
@@ -151,7 +152,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   };
 
   const handleAddAsEmergency = () => {
-    setIsAdding(true);
+    setIsAddingEmergency(true);
     addToCart({
       ...product,
       deliveryTime: '15-30 min',
@@ -161,7 +162,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     setShowEmergencyDialog(false);
     
     setTimeout(() => {
-      setIsAdding(false);
+      setIsAddingEmergency(false);
     }, 1000);
   };
   
@@ -230,6 +231,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Emergency Delivery</DialogTitle>
+            <DialogDescription>
+              Get this item delivered within 15-30 minutes
+            </DialogDescription>
           </DialogHeader>
           <div className="py-4">
             <p className="text-gray-700 mb-4">
@@ -246,10 +250,17 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               Cancel
             </Button>
             <Button 
-              className={`${isEmergencyInCart ? 'bg-red-700 hover:bg-red-800' : 'bg-red-500 hover:bg-red-600'}`} 
+              className={`${isEmergencyInCart || isAddingEmergency ? 'bg-red-700 hover:bg-red-800' : 'bg-red-500 hover:bg-red-600'}`} 
               onClick={handleAddAsEmergency}
+              disabled={isAddingEmergency}
             >
-              {isEmergencyInCart ? "Already Added" : "Add as Emergency"}
+              {isAddingEmergency ? (
+                <Check className="h-4 w-4" />
+              ) : isEmergencyInCart ? (
+                "Already Added"
+              ) : (
+                "Add as Emergency"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
