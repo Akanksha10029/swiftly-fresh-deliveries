@@ -1,10 +1,11 @@
 
 import React, { useState } from 'react';
-import { Plus, Check, Clock } from 'lucide-react';
+import { Plus, Check, Clock, Eye } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/context/CartContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 
 interface ProductCardProps {
   product: any;
@@ -15,6 +16,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const [isAdding, setIsAdding] = useState(false);
   const [isAddingEmergency, setIsAddingEmergency] = useState(false);
   const [showEmergencyDialog, setShowEmergencyDialog] = useState(false);
+  const [showQuickViewDialog, setShowQuickViewDialog] = useState(false);
   
   const isInCart = cartItems.some(item => item.id === product.id);
   
@@ -49,8 +51,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   
   return (
     <>
-      <Card className="h-full overflow-hidden hover:shadow-md transition-shadow">
-        <div className="p-3 aspect-square relative">
+      <Card className="h-full overflow-hidden hover:shadow-md transition-shadow group">
+        <div className="p-3 aspect-square relative overflow-hidden">
           <div className="absolute top-2 left-2 z-10">
             {product.deliveryTime && (
               <span className="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded-full">
@@ -61,8 +63,28 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           <img 
             src={product.image} 
             alt={product.name} 
-            className="w-full h-full object-contain" 
+            className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-110" 
           />
+          <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    onClick={() => setShowQuickViewDialog(true)}
+                    variant="secondary" 
+                    size="sm" 
+                    className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-white/80 hover:bg-white"
+                  >
+                    <Eye className="h-4 w-4 mr-1" />
+                    Quick View
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>View product details</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
         </div>
         <CardContent className="p-3 pt-2">
           <h3 className="font-medium text-sm line-clamp-2 mb-1">{product.name}</h3>
@@ -108,6 +130,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         </CardContent>
       </Card>
 
+      {/* Emergency Dialog */}
       <Dialog open={showEmergencyDialog} onOpenChange={setShowEmergencyDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -144,6 +167,63 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
               )}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Quick View Dialog */}
+      <Dialog open={showQuickViewDialog} onOpenChange={setShowQuickViewDialog}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{product.name}</DialogTitle>
+            <DialogDescription>
+              Product details and information
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
+            <div className="flex items-center justify-center bg-gray-50 p-4 rounded-md">
+              <img 
+                src={product.image} 
+                alt={product.name} 
+                className="max-h-40 object-contain" 
+              />
+            </div>
+            <div className="flex flex-col space-y-3">
+              <div>
+                <h4 className="text-sm font-medium text-gray-500">Product details</h4>
+                <p className="text-sm">{product.quantity}</p>
+              </div>
+              <div>
+                <h4 className="text-sm font-medium text-gray-500">Price</h4>
+                <p className="text-xl font-bold">₹{product.price}</p>
+              </div>
+              {product.deliveryTime && (
+                <div>
+                  <h4 className="text-sm font-medium text-gray-500">Standard delivery</h4>
+                  <p className="text-sm">{product.deliveryTime}</p>
+                </div>
+              )}
+              <div className="pt-2 flex space-x-2">
+                <Button 
+                  onClick={handleAddToCart}
+                  variant={isInCart ? "secondary" : "default"}
+                  className="flex-1"
+                >
+                  {isInCart ? "Added to cart" : "Add to cart"}
+                </Button>
+                <Button 
+                  onClick={() => {
+                    setShowQuickViewDialog(false);
+                    setShowEmergencyDialog(true);
+                  }}
+                  variant="outline"
+                  className="text-red-500 border-red-500 hover:bg-red-50"
+                >
+                  <Clock className="h-4 w-4 mr-1" />
+                  Emergency
+                </Button>
+              </div>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </>
