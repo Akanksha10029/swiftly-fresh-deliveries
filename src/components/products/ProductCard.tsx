@@ -66,14 +66,12 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-110" 
           />
           <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-            <Button 
+            <button 
               onClick={() => setShowQuickViewDialog(true)}
-              variant="secondary" 
-              size="sm" 
-              className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 hover:bg-white rounded-full"
+              className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-white text-gray-900 font-medium text-sm px-4 py-2 rounded-md shadow-sm"
             >
               View product details
-            </Button>
+            </button>
           </div>
         </div>
         <CardContent className="p-3 pt-2">
