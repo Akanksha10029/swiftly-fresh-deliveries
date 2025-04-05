@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import ProductCard from './ProductCard';
+import ProductCard from './product-card';
 
 interface CategoryListViewProps {
   categories: {

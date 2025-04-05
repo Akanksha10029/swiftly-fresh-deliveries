@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import ProductCard from './ProductCard';
+import ProductCard from './product-card';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink } from '@/components/ui/pagination';
 
 interface CategoryViewProps {

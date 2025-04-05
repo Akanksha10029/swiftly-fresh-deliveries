@@ -1,4 +1,4 @@
 
 import { ProductCard } from './ProductCardBase';
 
-export { ProductCard };
+export default ProductCard;
