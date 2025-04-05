@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useCart } from '@/context/CartContext';
 import { ProductCardImage } from './ProductCardImage';
@@ -12,12 +12,16 @@ interface ProductCardProps {
   product: any;
 }
 
+// Local storage key for favorites
+const FAVORITES_STORAGE_KEY = 'pharmacy-favorites';
+
 export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const { addToCart, cartItems } = useCart();
   const [isAdding, setIsAdding] = useState(false);
   const [isAddingEmergency, setIsAddingEmergency] = useState(false);
   const [showEmergencyDialog, setShowEmergencyDialog] = useState(false);
   const [showQuickViewDialog, setShowQuickViewDialog] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
   
   const isInCart = cartItems.some(item => item.id === product.id);
   
@@ -25,6 +29,15 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     item => item.id === product.id + '-emergency' || 
             (item.id === product.id && item.isEmergency)
   );
+
+  // Load favorites from localStorage on component mount
+  useEffect(() => {
+    const storedFavorites = localStorage.getItem(FAVORITES_STORAGE_KEY);
+    if (storedFavorites) {
+      const favorites = JSON.parse(storedFavorites);
+      setIsFavorite(favorites.includes(product.id));
+    }
+  }, [product.id]);
   
   const handleAddToCart = () => {
     setIsAdding(true);
@@ -49,6 +62,27 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
       setIsAddingEmergency(false);
     }, 1000);
   };
+
+  const handleToggleFavorite = () => {
+    const newFavoriteState = !isFavorite;
+    setIsFavorite(newFavoriteState);
+    
+    // Update localStorage
+    const storedFavorites = localStorage.getItem(FAVORITES_STORAGE_KEY);
+    let favorites = storedFavorites ? JSON.parse(storedFavorites) : [];
+    
+    if (newFavoriteState) {
+      // Add to favorites if not already there
+      if (!favorites.includes(product.id)) {
+        favorites.push(product.id);
+      }
+    } else {
+      // Remove from favorites
+      favorites = favorites.filter((id: string) => id !== product.id);
+    }
+    
+    localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(favorites));
+  };
   
   return (
     <>
@@ -64,8 +98,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             isInCart={isInCart}
             isEmergencyInCart={isEmergencyInCart}
             isAdding={isAdding}
+            isFavorite={isFavorite}
             handleAddToCart={handleAddToCart}
             onEmergencyClick={() => setShowEmergencyDialog(true)}
+            onToggleFavorite={handleToggleFavorite}
           />
         </CardContent>
       </Card>
