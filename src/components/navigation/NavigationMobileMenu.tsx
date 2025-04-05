@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Home, ShoppingBasket, Tag, Clipboard, MapPin, User, ShoppingCart } from 'lucide-react';
+import { Search, Home, ShoppingBasket, Tag, Clipboard, MapPin, User, ShoppingCart, Heart } from 'lucide-react';
 
 interface NavigationMobileMenuProps {
   isOpen: boolean;
@@ -33,9 +33,13 @@ export const NavigationMobileMenu = ({ isOpen }: NavigationMobileMenuProps) => {
           <Tag className="h-4 w-4 mr-2" />
           <span>Skincare</span>
         </Link>
-        <Link to="#" className="flex items-center text-sm font-medium py-2">
+        <Link to="/orders" className="flex items-center text-sm font-medium py-2">
           <Clipboard className="h-4 w-4 mr-2" />
           <span>My Orders</span>
+        </Link>
+        <Link to="/wishlist" className="flex items-center text-sm font-medium py-2">
+          <Heart className="h-4 w-4 mr-2" />
+          <span>Wishlist</span>
         </Link>
         <Link to="#" className="flex items-center text-sm font-medium py-2">
           <MapPin className="h-4 w-4 mr-2" />

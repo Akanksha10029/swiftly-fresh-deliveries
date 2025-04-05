@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Calendar, Home, Inbox, Search, Settings, ShoppingBasket, Sparkles, Wrench, Siren, Tag as TagIcon, Clipboard as ClipboardIcon } from 'lucide-react';
+import { Calendar, Home, Inbox, Search, Settings, ShoppingBasket, Sparkles, Wrench, Siren, Tag as TagIcon, Clipboard as ClipboardIcon, Heart } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import {
   NavigationMenu,
@@ -71,9 +71,18 @@ export const NavigationDesktopMenu = () => {
         
         <NavigationMenuItem>
           <NavigationMenuLink asChild>
-            <Link to="#" className="px-4 py-2 text-sm font-medium hover:text-primary transition-colors flex items-center">
+            <Link to="/orders" className="px-4 py-2 text-sm font-medium hover:text-primary transition-colors flex items-center">
               <ClipboardIcon className="h-4 w-4 mr-2" />
               My Orders
+            </Link>
+          </NavigationMenuLink>
+        </NavigationMenuItem>
+
+        <NavigationMenuItem>
+          <NavigationMenuLink asChild>
+            <Link to="/wishlist" className="px-4 py-2 text-sm font-medium hover:text-primary transition-colors flex items-center">
+              <Heart className="h-4 w-4 mr-2" />
+              Wishlist
             </Link>
           </NavigationMenuLink>
         </NavigationMenuItem>

@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { MapPin, User, ShoppingCart, LogOut } from 'lucide-react';
+import { MapPin, User, ShoppingCart, LogOut, Heart } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -46,6 +46,10 @@ export const NavigationActions = () => {
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuItem onClick={() => navigate('/orders')}>
               My Orders
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate('/wishlist')}>
+              <Heart className="h-4 w-4 mr-2" />
+              My Wishlist
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => navigate('/profile')}>
               Profile Settings
