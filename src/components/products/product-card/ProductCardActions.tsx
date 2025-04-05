@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Plus, Check, Clock, Heart } from 'lucide-react';
-import { toast } from '@/components/ui/use-toast';
+import { useToast } from "@/hooks/use-toast";
 
 interface ProductCardActionsProps {
   product: any;
@@ -25,6 +25,8 @@ export const ProductCardActions: React.FC<ProductCardActionsProps> = ({
   onEmergencyClick,
   onToggleFavorite
 }) => {
+  const { toast } = useToast();
+  
   return (
     <div className="flex justify-between items-center">
       <p className="font-bold">₹{product.price}</p>
