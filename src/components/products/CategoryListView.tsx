@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import ProductCard from './product-card';
+import ProductCard, { ProductCardSkeleton } from './product-card';
 
 interface CategoryListViewProps {
   categories: {
@@ -16,9 +16,14 @@ interface CategoryListViewProps {
     };
     products: any[];
   }[];
+  isLoading?: boolean;
 }
 
-const CategoryListView: React.FC<CategoryListViewProps> = ({ categories, productsByCategory }) => {
+const CategoryListView: React.FC<CategoryListViewProps> = ({ 
+  categories, 
+  productsByCategory, 
+  isLoading = false 
+}) => {
   const [showAllProducts, setShowAllProducts] = useState<Record<string, boolean>>({});
 
   const toggleShowAll = (categoryId: string) => {
@@ -31,6 +36,27 @@ const CategoryListView: React.FC<CategoryListViewProps> = ({ categories, product
   const getDisplayedProducts = (categoryId: string, products: any[]) => {
     return showAllProducts[categoryId] ? products : products.slice(0, 9);
   };
+
+  // If loading, render skeleton categories
+  if (isLoading) {
+    return (
+      <div className="space-y-10">
+        {Array(3).fill(0).map((_, categoryIndex) => (
+          <div key={`skeleton-category-${categoryIndex}`}>
+            <div className="flex justify-between items-center mb-4">
+              <div className="h-7 w-40 bg-muted rounded animate-pulse" />
+              <div className="h-5 w-20 bg-muted rounded animate-pulse" />
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              {Array(9).fill(0).map((_, index) => (
+                <ProductCardSkeleton key={`skeleton-${categoryIndex}-${index}`} />
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-10">
