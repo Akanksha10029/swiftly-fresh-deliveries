@@ -7,19 +7,12 @@ import { ProductCardDetails } from './ProductCardDetails';
 import { ProductCardActions } from './ProductCardActions';
 import { EmergencyDialog } from './EmergencyDialog';
 import { QuickViewDialog } from './QuickViewDialog';
-import { ProductCardSkeleton } from './ProductCardSkeleton';
 
 interface ProductCardProps {
   product: any;
-  isLoading?: boolean;
 }
 
-export const ProductCard: React.FC<ProductCardProps> = ({ product, isLoading = false }) => {
-  // If loading, return the skeleton component
-  if (isLoading) {
-    return <ProductCardSkeleton />;
-  }
-  
+export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const { addToCart, cartItems } = useCart();
   const [isAdding, setIsAdding] = useState(false);
   const [isAddingEmergency, setIsAddingEmergency] = useState(false);
