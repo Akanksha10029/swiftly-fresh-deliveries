@@ -1,7 +1,7 @@
 
 import React, { useRef, useEffect, useState } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { Environment, OrbitControls, useGLTF, PresentationControls, Float } from '@react-three/drei';
+import { Canvas, useFrame, ThreeElements } from '@react-three/fiber';
+import { Environment, OrbitControls, PresentationControls, Float } from '@react-three/drei';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Navigation from '@/components/Navigation';
@@ -11,12 +11,14 @@ import Footer from '@/components/Footer';
 gsap.registerPlugin(ScrollTrigger);
 
 // A component for a 3D grocery bag
-function GroceryBag({ position = [0, 0, 0], rotation = [0, 0, 0], scale = 1 }) {
-  // Using a placeholder model - in production you would use your actual model path
-  const { scene } = useGLTF('/placeholder.svg'); // Replace with actual model path
-  const meshRef = useRef();
+function GroceryBag({ position = [0, 0, 0], rotation = [0, 0, 0], scale = 1 }: {
+  position?: [number, number, number];
+  rotation?: [number, number, number];
+  scale?: number;
+}) {
+  const meshRef = useRef<THREE.Mesh>(null);
   
-  useFrame((state) => {
+  useFrame(() => {
     if (meshRef.current) {
       // Add subtle floating animation
       meshRef.current.rotation.y += 0.005;
@@ -35,10 +37,14 @@ function GroceryBag({ position = [0, 0, 0], rotation = [0, 0, 0], scale = 1 }) {
 }
 
 // A component for fresh produce
-function FreshProduce({ position = [0, 0, 0], rotation = [0, 0, 0], scale = 1 }) {
-  const meshRef = useRef();
+function FreshProduce({ position = [0, 0, 0], rotation = [0, 0, 0], scale = 1 }: {
+  position?: [number, number, number];
+  rotation?: [number, number, number];
+  scale?: number;
+}) {
+  const meshRef = useRef<THREE.Mesh>(null);
   
-  useFrame((state, delta) => {
+  useFrame((_, delta) => {
     if (meshRef.current) {
       meshRef.current.rotation.z += delta * 0.2;
     }
@@ -88,9 +94,11 @@ function ThreeDScene() {
 
 // Animations section with scroll effects
 function AnimatedFeatures() {
-  const featuresRef = useRef();
+  const featuresRef = useRef<HTMLDivElement>(null);
   
   useEffect(() => {
+    if (!featuresRef.current) return;
+    
     const sections = featuresRef.current.querySelectorAll('.feature-item');
     
     sections.forEach((section, index) => {
