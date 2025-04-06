@@ -112,7 +112,7 @@ function SmartCube({ product, setHovered, hovered, setSelected }: ModelProps) {
         />
         
         {/* Icon on the cube face */}
-        <Html position={[0, 0, 0.61]} transform scale={0.2} rotation={[0, 0, 0]} center>
+        <Html position={[0, 0, 0.61]} transform scale={0.2} rotation-x={0} rotation-y={0} rotation-z={0} center>
           <div className="w-40 h-40 flex items-center justify-center text-white text-7xl">
             {product.icon}
           </div>
@@ -181,7 +181,7 @@ function FreshProduce({ product, setHovered, hovered, setSelected }: ModelProps)
         />
         
         {/* Icon floating inside */}
-        <Html position={[0, 0, 0]} transform scale={0.15} center>
+        <Html position={[0, 0, 0]} transform scale={0.15} rotation-x={0} rotation-y={0} rotation-z={0} center>
           <div className="w-40 h-40 flex items-center justify-center text-white text-7xl">
             {product.icon}
           </div>
@@ -208,20 +208,19 @@ function Laptop({ product, setHovered, hovered, setSelected }: ModelProps) {
   const screenRef = useRef<THREE.Mesh>(null);
   const isHovered = hovered === product.id;
   const cursor = useCursor();
-  const { scrollYProgress } = useThree();
+  const { clock } = useThree();
   
-  useFrame((state, delta) => {
+  useFrame((state) => {
     if (groupRef.current && screenRef.current) {
       // Base floating animation
-      const time = state.clock.getElapsedTime();
+      const time = clock.getElapsedTime();
       groupRef.current.position.y = Math.sin(time * 0.6) * 0.15 + product.position[1];
       
       // Subtle rotation
-      groupRef.current.rotation.y += delta * 0.05;
+      groupRef.current.rotation.y += 0.002;
       
-      // Open/close laptop based on scroll
-      // We want the laptop to open as we scroll down
-      const openAmount = Math.min(Math.max(scrollYProgress.get() * 2.5, 0), 1);
+      // Open/close laptop based on scroll - simulate with time
+      const openAmount = Math.min(Math.max((Math.sin(time * 0.2) + 1) / 2, 0), 1);
       screenRef.current.rotation.x = -Math.PI/6 + (Math.PI/2.5) * openAmount;
       
       // Parallax effect when hovered
@@ -264,7 +263,7 @@ function Laptop({ product, setHovered, hovered, setSelected }: ModelProps) {
       </mesh>
       
       {/* Screen */}
-      <group ref={screenRef} position={[0, 0, -0.7]} rotation={[-Math.PI/6, 0, 0]}>
+      <group position={[0, 0, -0.7]} rotation={[-Math.PI/6, 0, 0]} ref={screenRef}>
         <mesh position={[0, 0.6, 0]}>
           <boxGeometry args={[2, 1.2, 0.05]} />
           <meshStandardMaterial 
@@ -288,7 +287,7 @@ function Laptop({ product, setHovered, hovered, setSelected }: ModelProps) {
           />
           
           {/* Screen content */}
-          <Html position={[0, 0, 0.01]} transform scale={0.13} rotation={[0, 0, 0]} center>
+          <Html position={[0, 0, 0.01]} transform scale={0.13} rotation-x={0} rotation-y={0} rotation-z={0} center>
             <div className="w-[600px] h-[350px] flex flex-col items-center justify-center bg-primary/20 text-primary rounded-md">
               <div className="text-5xl mb-4">{product.icon}</div>
               <h3 className="text-2xl font-bold">{product.name}</h3>
@@ -378,7 +377,7 @@ function Smartphone({ product, setHovered, hovered, setSelected }: ModelProps) {
         />
         
         {/* Screen content */}
-        <Html position={[0, 0, 0.01]} transform scale={0.08} rotation={[0, 0, 0]} center>
+        <Html position={[0, 0, 0.01]} transform scale={0.08} rotation-x={0} rotation-y={0} rotation-z={0} center>
           <div className="w-[300px] h-[600px] flex flex-col items-center justify-center bg-primary/10 text-primary rounded-md">
             <div className="text-6xl mb-6">{product.icon}</div>
             <h3 className="text-2xl font-bold">{product.name}</h3>
@@ -407,7 +406,7 @@ function Smartphone({ product, setHovered, hovered, setSelected }: ModelProps) {
   );
 }
 
-// Product model detail dialog
+// Enhanced product detail dialog
 function ProductDetailDialog({ selectedProduct, onClose }: { 
   selectedProduct: ProductModel | null;
   onClose: () => void;
@@ -416,31 +415,43 @@ function ProductDetailDialog({ selectedProduct, onClose }: {
 
   return (
     <Dialog open={!!selectedProduct} onOpenChange={() => onClose()}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[625px]">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <span className="text-xl">{selectedProduct.icon}</span>
+          <DialogTitle className="flex items-center gap-2 text-2xl">
+            <span className="text-2xl">{selectedProduct.icon}</span>
             <span>{selectedProduct.name}</span>
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-base">
             {selectedProduct.description}
           </DialogDescription>
         </DialogHeader>
         
-        <div className="mt-4 space-y-4">
-          <p className="text-foreground">{selectedProduct.longDescription}</p>
+        <div className="mt-4 space-y-6">
+          <div className="bg-gradient-to-r from-primary/10 to-accent/10 p-5 rounded-lg border border-primary/10">
+            <p className="text-foreground/90 text-md leading-relaxed">{selectedProduct.longDescription}</p>
+          </div>
           
-          <div className="bg-primary/10 p-4 rounded-lg">
-            <h4 className="font-medium mb-2">Key Features</h4>
-            <ul className="list-disc list-inside space-y-1 text-sm">
-              <li>AI-powered technology</li>
-              <li>Seamless integration with SwiftFresh ecosystem</li>
-              <li>Real-time data synchronization</li>
-              <li>Energy-efficient design</li>
+          <div className="bg-primary/10 p-5 rounded-lg">
+            <h4 className="font-medium text-lg mb-3 flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              Key Features
+            </h4>
+            <ul className="space-y-3">
+              {selectedProduct.features.map((feature, index) => (
+                <li key={index} className="flex items-start">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-accent mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>{feature}</span>
+                </li>
+              ))}
             </ul>
           </div>
           
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-3">
+            <Button variant="outline" onClick={() => onClose()}>Close</Button>
             <Button>Learn More</Button>
           </div>
         </div>
@@ -565,6 +576,24 @@ export function InteractiveScene() {
         selectedProduct={selectedProduct} 
         onClose={() => setSelectedProduct(null)} 
       />
+
+      {/* Main controls panel */}
+      <div className="absolute top-4 left-4 bg-background/80 backdrop-blur-sm p-3 rounded-lg border border-primary/20">
+        <h4 className="text-sm font-medium mb-2">Explore Products:</h4>
+        <div className="space-y-2">
+          {productModels.map(product => (
+            <Button 
+              key={product.id} 
+              variant="ghost" 
+              size="sm"
+              className="w-full justify-start text-xs p-2 h-auto"
+              onClick={() => handleSelectProduct(product.id)}
+            >
+              <span className="mr-2">{product.icon}</span> {product.name}
+            </Button>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
