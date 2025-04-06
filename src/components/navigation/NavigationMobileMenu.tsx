@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Home, ShoppingBasket, Tag, Clipboard, MapPin, User, ShoppingCart, Heart } from 'lucide-react';
+import { Search, Home, ShoppingBasket, Tag, Clipboard, MapPin, User, Heart } from 'lucide-react';
 
 interface NavigationMobileMenuProps {
   isOpen: boolean;
