@@ -16,6 +16,21 @@ const Navigation = () => {
   const isMobile = useIsMobile();
   const isScrolled = useScroll();
 
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
+    // When opening the menu, prevent body scrolling
+    if (!isMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+  };
+
+  const closeMenu = () => {
+    setIsMenuOpen(false);
+    document.body.style.overflow = '';
+  };
+
   return (
     <header
       className={cn(
@@ -39,14 +54,15 @@ const Navigation = () => {
             variant="outline"
             size="icon"
             className="p-2"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            onClick={toggleMenu}
+            aria-label={isMenuOpen ? "Close menu" : "Open menu"}
           >
             {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </Button>
         )}
       </div>
 
-      {isMobile && <NavigationMobileMenu isOpen={isMenuOpen} />}
+      {isMobile && <NavigationMobileMenu isOpen={isMenuOpen} onClose={closeMenu} />}
     </header>
   );
 };
