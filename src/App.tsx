@@ -17,6 +17,7 @@ import SignUp from "./pages/Auth/SignUp";
 import Orders from "./pages/Orders";
 import EmergencyProducts from "./pages/EmergencyProducts";
 import Wishlist from "./pages/Wishlist";
+import About from "./pages/About";
 
 const queryClient = new QueryClient();
 
@@ -33,6 +34,7 @@ const App = () => {
               <Sonner />
               <Routes>
                 <Route path="/" element={<Index />} />
+                <Route path="/about" element={<About />} />
                 <Route path="/products" element={<Products />} />
                 <Route path="/products/:category" element={<Products />} />
                 <Route path="/products/emergency" element={<EmergencyProducts />} />
