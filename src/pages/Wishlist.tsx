@@ -11,7 +11,7 @@ import ProductCard from '@/components/products/product-card';
 import { useAuth } from '@/context/AuthContext';
 
 // Get the product data
-import { products } from '@/data/products';
+import { allProducts } from '@/data/products';
 
 const FAVORITES_STORAGE_KEY = 'pharmacy-favorites';
 
@@ -28,7 +28,7 @@ const Wishlist = () => {
       if (storedFavorites) {
         const favoriteIds = JSON.parse(storedFavorites);
         // Find products that match the IDs in favorites
-        const favoriteProducts = products.filter(product => 
+        const favoriteProducts = allProducts.filter(product => 
           favoriteIds.includes(product.id)
         );
         setFavoriteItems(favoriteProducts);

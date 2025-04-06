@@ -45,13 +45,9 @@ export const NavigationMobileMenu = ({ isOpen }: NavigationMobileMenuProps) => {
           <MapPin className="h-4 w-4 mr-2" />
           <span>Set Location</span>
         </Link>
-        <Link to="#" className="flex items-center text-sm font-medium py-2">
+        <Link to="/auth/signin" className="flex items-center text-sm font-medium py-2">
           <User className="h-4 w-4 mr-2" />
           <span>Account</span>
-        </Link>
-        <Link to="#" className="flex items-center text-sm font-medium py-2">
-          <ShoppingCart className="h-4 w-4 mr-2" />
-          <span>Cart</span>
         </Link>
       </nav>
     </div>
