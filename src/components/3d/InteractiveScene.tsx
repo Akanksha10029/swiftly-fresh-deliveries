@@ -120,7 +120,7 @@ function SmartCube({ product, setHovered, hovered, setSelected }: ModelProps) {
         
         {/* Label */}
         {isHovered && (
-          <Html position={[0, -1, 0]} center>
+          <Html position={[0, -1, 0]} center distanceFactor={10}>
             <div className="bg-background/90 backdrop-blur-md p-3 rounded-lg shadow-lg border border-primary/20 w-48">
               <h3 className="text-primary font-bold text-lg">{product.name}</h3>
               <p className="text-xs text-muted-foreground">{product.description}</p>
@@ -189,7 +189,7 @@ function FreshProduce({ product, setHovered, hovered, setSelected }: ModelProps)
         
         {/* Label */}
         {isHovered && (
-          <Html position={[0, -1.5, 0]} center>
+          <Html position={[0, -1.5, 0]} center distanceFactor={10}>
             <div className="bg-background/90 backdrop-blur-md p-3 rounded-lg shadow-lg border border-primary/20 w-48">
               <h3 className="text-primary font-bold text-lg">{product.name}</h3>
               <p className="text-xs text-muted-foreground">{product.description}</p>
@@ -299,7 +299,7 @@ function Laptop({ product, setHovered, hovered, setSelected }: ModelProps) {
       
       {/* Label */}
       {isHovered && (
-        <Html position={[0, -1, 0]} center>
+        <Html position={[0, -1, 0]} center distanceFactor={10}>
           <div className="bg-background/90 backdrop-blur-md p-3 rounded-lg shadow-lg border border-primary/20 w-48">
             <h3 className="text-primary font-bold text-lg">{product.name}</h3>
             <p className="text-xs text-muted-foreground">{product.description}</p>
@@ -394,7 +394,7 @@ function Smartphone({ product, setHovered, hovered, setSelected }: ModelProps) {
       
       {/* Label */}
       {isHovered && (
-        <Html position={[0, -1.2, 0]} center>
+        <Html position={[0, -1.2, 0]} center distanceFactor={10}>
           <div className="bg-background/90 backdrop-blur-md p-3 rounded-lg shadow-lg border border-primary/20 w-48">
             <h3 className="text-primary font-bold text-lg">{product.name}</h3>
             <p className="text-xs text-muted-foreground">{product.description}</p>
@@ -577,8 +577,8 @@ export function InteractiveScene() {
         onClose={() => setSelectedProduct(null)} 
       />
 
-      {/* Main controls panel */}
-      <div className="absolute top-4 left-4 bg-background/80 backdrop-blur-sm p-3 rounded-lg border border-primary/20">
+      {/* Main controls panel - Fixed position to avoid overlapping */}
+      <div className="absolute top-4 left-4 z-10 bg-background/90 backdrop-blur-sm p-3 rounded-lg border border-primary/20 max-w-[200px]">
         <h4 className="text-sm font-medium mb-2">Explore Products:</h4>
         <div className="space-y-2">
           {productModels.map(product => (

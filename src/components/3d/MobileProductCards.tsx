@@ -50,7 +50,7 @@ export function MobileProductCards() {
   }, []);
 
   return (
-    <div ref={cardsRef} className="py-12 lg:py-20 bg-gradient-to-b from-background to-background/50">
+    <div ref={cardsRef} className="py-16 lg:py-24 bg-gradient-to-b from-background to-background/50">
       <div className="max-w-7xl mx-auto px-4">
         <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 md:mb-16 text-gradient">Our Smart Products</h2>
         
@@ -64,7 +64,7 @@ export function MobileProductCards() {
               transition={{ delay: index * 0.2, duration: 0.5 }}
               whileHover={{ scale: 1.02 }}
             >
-              <Card className="h-full border-2 hover:border-primary/50 transition-all duration-300">
+              <Card className="h-full border-2 hover:border-primary/50 transition-all duration-300 shadow-md">
                 <CardContent className="p-0">
                   <div className={cn(
                     "h-48 flex items-center justify-center text-5xl relative", 
