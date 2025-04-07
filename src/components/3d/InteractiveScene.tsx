@@ -1,3 +1,4 @@
+
 import React, { useRef, useState, useEffect, Suspense } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { 
@@ -109,17 +110,16 @@ function SmartCube({ product, setHovered, hovered, setSelected }: ModelProps) {
             {product.icon}
           </div>
         </Html>
-        
-        {isHovered && (
-          <Html position={[0, -1, 0]} center distanceFactor={10}>
-            <div className="bg-background/90 backdrop-blur-md p-3 rounded-lg shadow-lg border border-primary/20 w-48">
-              <h3 className="text-primary font-bold text-lg">{product.name}</h3>
-              <p className="text-xs text-muted-foreground">{product.description}</p>
-              <p className="text-xs mt-1 text-primary">Click for details</p>
-            </div>
-          </Html>
-        )}
       </mesh>
+      
+      {isHovered && (
+        <Html position={[0, -1, 0]} center distanceFactor={15}>
+          <div className="bg-background/90 backdrop-blur-md p-2 rounded-lg shadow-lg border border-primary/20 w-28 scale-75">
+            <h3 className="text-primary font-bold text-sm">{product.name}</h3>
+            <p className="text-xs text-muted-foreground line-clamp-2">{product.description}</p>
+          </div>
+        </Html>
+      )}
     </group>
   );
 }
@@ -172,17 +172,16 @@ function FreshProduce({ product, setHovered, hovered, setSelected }: ModelProps)
             {product.icon}
           </div>
         </Html>
-        
-        {isHovered && (
-          <Html position={[0, -1.5, 0]} center distanceFactor={10}>
-            <div className="bg-background/90 backdrop-blur-md p-3 rounded-lg shadow-lg border border-primary/20 w-48">
-              <h3 className="text-primary font-bold text-lg">{product.name}</h3>
-              <p className="text-xs text-muted-foreground">{product.description}</p>
-              <p className="text-xs mt-1 text-primary">Click for details</p>
-            </div>
-          </Html>
-        )}
       </mesh>
+      
+      {isHovered && (
+        <Html position={[0, -1.5, 0]} center distanceFactor={15}>
+          <div className="bg-background/90 backdrop-blur-md p-2 rounded-lg shadow-lg border border-primary/20 w-28 scale-75">
+            <h3 className="text-primary font-bold text-sm">{product.name}</h3>
+            <p className="text-xs text-muted-foreground line-clamp-2">{product.description}</p>
+          </div>
+        </Html>
+      )}
     </group>
   );
 }
@@ -263,21 +262,19 @@ function Laptop({ product, setHovered, hovered, setSelected }: ModelProps) {
           />
           
           <Html position={[0, 0, 0.01]} transform scale={0.13} rotation-x={0} rotation-y={0} rotation-z={0} center>
-            <div className="w-[600px] h-[350px] flex flex-col items-center justify-center bg-primary/20 text-primary rounded-md">
-              <div className="text-5xl mb-4">{product.icon}</div>
-              <h3 className="text-2xl font-bold">{product.name}</h3>
-              <p className="text-sm w-3/4 text-center mt-2">{product.description}</p>
+            <div className="w-[300px] h-[200px] flex flex-col items-center justify-center bg-primary/20 text-primary rounded-md">
+              <div className="text-3xl mb-2">{product.icon}</div>
+              <h3 className="text-lg font-bold">{product.name}</h3>
             </div>
           </Html>
         </mesh>
       </group>
       
       {isHovered && (
-        <Html position={[0, -1, 0]} center distanceFactor={10}>
-          <div className="bg-background/90 backdrop-blur-md p-3 rounded-lg shadow-lg border border-primary/20 w-48">
-            <h3 className="text-primary font-bold text-lg">{product.name}</h3>
-            <p className="text-xs text-muted-foreground">{product.description}</p>
-            <p className="text-xs mt-1 text-primary">Click for details</p>
+        <Html position={[0, -1, 0]} center distanceFactor={15}>
+          <div className="bg-background/90 backdrop-blur-md p-2 rounded-lg shadow-lg border border-primary/20 w-28 scale-75">
+            <h3 className="text-primary font-bold text-sm">{product.name}</h3>
+            <p className="text-xs text-muted-foreground line-clamp-2">{product.description}</p>
           </div>
         </Html>
       )}
@@ -344,10 +341,9 @@ function Smartphone({ product, setHovered, hovered, setSelected }: ModelProps) {
         />
         
         <Html position={[0, 0, 0.01]} transform scale={0.08} rotation-x={0} rotation-y={0} rotation-z={0} center>
-          <div className="w-[300px] h-[600px] flex flex-col items-center justify-center bg-primary/10 text-primary rounded-md">
-            <div className="text-6xl mb-6">{product.icon}</div>
-            <h3 className="text-2xl font-bold">{product.name}</h3>
-            <p className="text-sm w-3/4 text-center mt-2">{product.description}</p>
+          <div className="w-[150px] h-[300px] flex flex-col items-center justify-center bg-primary/10 text-primary rounded-md">
+            <div className="text-3xl mb-2">{product.icon}</div>
+            <h3 className="text-lg font-bold">{product.name}</h3>
           </div>
         </Html>
       </mesh>
@@ -358,11 +354,10 @@ function Smartphone({ product, setHovered, hovered, setSelected }: ModelProps) {
       </mesh>
       
       {isHovered && (
-        <Html position={[0, -1.2, 0]} center distanceFactor={10}>
-          <div className="bg-background/90 backdrop-blur-md p-3 rounded-lg shadow-lg border border-primary/20 w-48">
-            <h3 className="text-primary font-bold text-lg">{product.name}</h3>
-            <p className="text-xs text-muted-foreground">{product.description}</p>
-            <p className="text-xs mt-1 text-primary">Click for details</p>
+        <Html position={[0, -1.2, 0]} center distanceFactor={15}>
+          <div className="bg-background/90 backdrop-blur-md p-2 rounded-lg shadow-lg border border-primary/20 w-28 scale-75">
+            <h3 className="text-primary font-bold text-sm">{product.name}</h3>
+            <p className="text-xs text-muted-foreground line-clamp-2">{product.description}</p>
           </div>
         </Html>
       )}
@@ -426,16 +421,7 @@ function ProductDetailDialog({ selectedProduct, onClose }: {
 export function InteractiveScene() {
   const [hovered, setHovered] = useState<string | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<ProductModel | null>(null);
-  const [zoom, setZoom] = useState(5);
   const isMobile = useIsMobile();
-  
-  const handleZoomIn = () => {
-    setZoom(prev => Math.max(prev - 1, 2));
-  };
-  
-  const handleZoomOut = () => {
-    setZoom(prev => Math.min(prev + 1, 8));
-  };
 
   const handleSelectProduct = (id: string | null) => {
     if (id) {
@@ -448,7 +434,7 @@ export function InteractiveScene() {
 
   return (
     <div className="relative h-[70vh] w-full">
-      <Canvas camera={{ position: [0, 0, zoom], fov: 45 }}>
+      <Canvas camera={{ position: [0, 0, 5], fov: 45 }}>
         <Suspense fallback={<Loader />}>
           <ambientLight intensity={0.6} />
           <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} intensity={1} castShadow />
@@ -494,7 +480,7 @@ export function InteractiveScene() {
           <ContactShadows position={[0, -2, 0]} opacity={0.4} scale={10} blur={1.5} />
           <Environment preset="city" />
           <OrbitControls
-            enableZoom={true}
+            enableZoom={false}
             enablePan={false}
             minPolarAngle={Math.PI / 6}
             maxPolarAngle={Math.PI - Math.PI / 6}
@@ -503,13 +489,21 @@ export function InteractiveScene() {
         </Suspense>
       </Canvas>
       
-      <div className="absolute bottom-4 right-4 flex space-x-2">
-        <Button onClick={handleZoomIn} variant="outline" size="icon" className="bg-white/80 backdrop-blur-sm">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-zoom-in"><circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/><line x1="11" x2="11" y1="8" y2="14"/><line x1="8" x2="14" y1="11" y2="11"/></svg>
-        </Button>
-        <Button onClick={handleZoomOut} variant="outline" size="icon" className="bg-white/80 backdrop-blur-sm">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-zoom-out"><circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/><line x1="8" x2="14" y1="11" y2="11"/></svg>
-        </Button>
+      <div className="absolute top-4 right-4 z-10 bg-background/90 backdrop-blur-sm p-3 rounded-lg border border-primary/20 max-w-[200px]">
+        <h4 className="text-sm font-medium mb-2">Explore Products:</h4>
+        <div className="space-y-2">
+          {productModels.map(product => (
+            <Button 
+              key={product.id} 
+              variant="ghost" 
+              size="sm"
+              className="w-full justify-start text-xs p-2 h-auto"
+              onClick={() => handleSelectProduct(product.id)}
+            >
+              <span className="mr-2">{product.icon}</span> {product.name}
+            </Button>
+          ))}
+        </div>
       </div>
       
       {isMobile && (
@@ -535,23 +529,6 @@ export function InteractiveScene() {
         selectedProduct={selectedProduct} 
         onClose={() => setSelectedProduct(null)} 
       />
-
-      <div className="absolute top-4 left-4 z-10 bg-background/90 backdrop-blur-sm p-3 rounded-lg border border-primary/20 max-w-[200px]">
-        <h4 className="text-sm font-medium mb-2">Explore Products:</h4>
-        <div className="space-y-2">
-          {productModels.map(product => (
-            <Button 
-              key={product.id} 
-              variant="ghost" 
-              size="sm"
-              className="w-full justify-start text-xs p-2 h-auto"
-              onClick={() => handleSelectProduct(product.id)}
-            >
-              <span className="mr-2">{product.icon}</span> {product.name}
-            </Button>
-          ))}
-        </div>
-      </div>
     </div>
   );
 }

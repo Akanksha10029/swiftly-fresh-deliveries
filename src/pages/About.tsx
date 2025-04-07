@@ -148,11 +148,11 @@ const About = () => {
   const isMobile = useIsMobile();
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white to-gray-50">
+    <div className="min-h-screen bg-gradient-to-b from-white to-gray-50 overflow-x-hidden">
       <Navigation />
       
       {/* Hero Section with 3D Models */}
-      <section className="pt-24 pb-16">
+      <section className="pt-24 pb-16 relative">
         <div className="max-w-7xl mx-auto px-4 text-center">
           <h1 className="text-5xl md:text-6xl font-bold mb-6 heading-responsive">
             Reimagining <span className="text-gradient">Grocery Delivery</span>
@@ -162,7 +162,9 @@ const About = () => {
           </p>
           
           {/* 3D Scene with interactive controls */}
-          <InteractiveScene />
+          <div className="relative z-10 mb-10">
+            <InteractiveScene />
+          </div>
         </div>
       </section>
       

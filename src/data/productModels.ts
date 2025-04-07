@@ -20,7 +20,7 @@ export const productModels: ProductModel[] = [
     icon: "📊",
     color: "#4ade80",
     type: "3d-cube",
-    position: [-3, 0, 0], // Moved further left
+    position: [-4, 0, 0], // Moved further left for better spacing
     features: [
       "Automated inventory tracking",
       "Smart reordering system",
@@ -37,7 +37,7 @@ export const productModels: ProductModel[] = [
     icon: "🥦",
     color: "#34d399",
     type: "3d-sphere",
-    position: [0, 1.5, 0], // Moved higher
+    position: [0, 2, 0], // Moved higher for better spacing
     features: [
       "Real-time freshness monitoring",
       "Spoilage alerts and notifications",
@@ -54,7 +54,7 @@ export const productModels: ProductModel[] = [
     icon: "💻",
     color: "#0ea5e9",
     type: "3d-laptop",
-    position: [0, -1.5, 0], // Maintained position
+    position: [0, -2, 0], // Moved lower for better spacing
     features: [
       "Real-time delivery tracking",
       "Live map integration",
@@ -71,7 +71,7 @@ export const productModels: ProductModel[] = [
     icon: "📱",
     color: "#3b82f6",
     type: "3d-phone",
-    position: [3, 0, 0], // Moved further right
+    position: [4, 0, 0], // Moved further right for better spacing
     features: [
       "One-tap reordering",
       "Personalized recommendations",
