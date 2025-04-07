@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MapPin, User, ShoppingCart, LogOut, Heart } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useAuth } from '@/context/AuthContext';
@@ -11,6 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
+import { supabase } from '@/integrations/supabase/client';
 
 export const NavigationActions = () => {
   const { setIsCartOpen, totalItems, subtotal } = useCart();
@@ -18,6 +19,36 @@ export const NavigationActions = () => {
   const navigate = useNavigate();
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<string>('Set Location');
+  const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+
+  // Fetch default location when authenticated
+  useEffect(() => {
+    if (isAuthenticated && user?.id) {
+      fetchDefaultLocation();
+    }
+  }, [isAuthenticated, user?.id]);
+
+  const fetchDefaultLocation = async () => {
+    setIsLoadingLocation(true);
+    try {
+      const { data, error } = await supabase
+        .from('saved_locations')
+        .select('address')
+        .eq('user_id', user?.id)
+        .eq('is_default', true)
+        .maybeSingle();
+        
+      if (error) throw error;
+      
+      if (data?.address) {
+        setCurrentLocation(data.address);
+      }
+    } catch (error) {
+      console.error('Error fetching default location:', error);
+    } finally {
+      setIsLoadingLocation(false);
+    }
+  };
 
   const handleLocationSelect = (location: string) => {
     setCurrentLocation(location);
@@ -31,7 +62,7 @@ export const NavigationActions = () => {
       >
         <MapPin className="h-4 w-4 mr-2" />
         <span className="hidden lg:inline truncate max-w-[150px]">
-          {currentLocation}
+          {isLoadingLocation ? 'Loading...' : currentLocation}
         </span>
       </button>
       

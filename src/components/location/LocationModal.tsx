@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { MapPin, Plus } from 'lucide-react';
+import { MapPin, Plus, Loader2 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
@@ -20,26 +20,35 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
   const [newLocation, setNewLocation] = useState('');
   const [isAdding, setIsAdding] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (isAuthenticated && isOpen) {
       fetchLocations();
     }
-  }, [isAuthenticated, isOpen]);
+  }, [isAuthenticated, isOpen, user?.id]);
 
   const fetchLocations = async () => {
     setIsLoading(true);
+    setError(null);
     try {
+      if (!user?.id) {
+        throw new Error('User ID not found');
+      }
+      
       const { data, error } = await supabase
         .from('saved_locations')
         .select('*')
-        .eq('user_id', user?.id)
+        .eq('user_id', user.id)
         .order('is_default', { ascending: false });
         
       if (error) throw error;
       
       setLocations(data || []);
+      console.log('Fetched locations:', data);
     } catch (error: any) {
+      console.error('Error fetching locations:', error);
+      setError(error.message);
       toast({
         title: 'Error fetching locations',
         description: error.message,
@@ -102,7 +111,31 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
         {isAuthenticated ? (
           <div className="space-y-4">
             {isLoading ? (
-              <div className="text-center py-4">Loading locations...</div>
+              <div className="flex flex-col items-center justify-center py-6">
+                <Loader2 className="h-6 w-6 animate-spin text-primary mb-2" />
+                <p>Loading locations...</p>
+              </div>
+            ) : error ? (
+              <div className="text-center py-4 text-red-500">
+                <p>{error}</p>
+                <Button variant="outline" className="mt-2" onClick={fetchLocations}>
+                  Try Again
+                </Button>
+              </div>
+            ) : locations.length === 0 ? (
+              <div className="text-center py-4">
+                <p className="mb-4">You don't have any saved locations yet.</p>
+                {!isAdding && (
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setIsAdding(true)}
+                    className="mx-auto"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Your First Location
+                  </Button>
+                )}
+              </div>
             ) : (
               <>
                 {locations.map((location) => (
@@ -124,19 +157,7 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
                   </div>
                 ))}
                 
-                {isAdding ? (
-                  <div className="flex flex-col space-y-2">
-                    <Input
-                      value={newLocation}
-                      onChange={(e) => setNewLocation(e.target.value)}
-                      placeholder="Enter your address"
-                    />
-                    <div className="flex space-x-2">
-                      <Button onClick={addLocation}>Save</Button>
-                      <Button variant="outline" onClick={() => setIsAdding(false)}>Cancel</Button>
-                    </div>
-                  </div>
-                ) : (
+                {!isAdding && (
                   <Button 
                     variant="outline" 
                     className="w-full" 
@@ -147,6 +168,20 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
                   </Button>
                 )}
               </>
+            )}
+            
+            {isAdding && (
+              <div className="flex flex-col space-y-2">
+                <Input
+                  value={newLocation}
+                  onChange={(e) => setNewLocation(e.target.value)}
+                  placeholder="Enter your address"
+                />
+                <div className="flex space-x-2">
+                  <Button onClick={addLocation}>Save</Button>
+                  <Button variant="outline" onClick={() => setIsAdding(false)}>Cancel</Button>
+                </div>
+              </div>
             )}
           </div>
         ) : (
