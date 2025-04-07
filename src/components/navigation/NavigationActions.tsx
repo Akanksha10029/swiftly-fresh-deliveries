@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { MapPin, User, ShoppingCart, LogOut, Heart } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
@@ -12,6 +11,7 @@ import {
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
 
 export const NavigationActions = () => {
   const { setIsCartOpen, totalItems, subtotal } = useCart();
@@ -23,35 +23,74 @@ export const NavigationActions = () => {
 
   // Fetch default location when authenticated
   useEffect(() => {
-    if (isAuthenticated && user?.id) {
-      fetchDefaultLocation();
-    }
+    const fetchLocation = async () => {
+      if (isAuthenticated && user?.id) {
+        await fetchDefaultLocation();
+      }
+    };
+    
+    fetchLocation();
   }, [isAuthenticated, user?.id]);
 
   const fetchDefaultLocation = async () => {
     setIsLoadingLocation(true);
+    console.log('Fetching default location...');
+    
     try {
-      const { data, error } = await supabase
+      // First try to get the default location
+      const { data: defaultLocation, error: defaultError } = await supabase
         .from('saved_locations')
         .select('address')
         .eq('user_id', user?.id)
         .eq('is_default', true)
         .maybeSingle();
-        
-      if (error) throw error;
       
-      if (data?.address) {
-        setCurrentLocation(data.address);
+      if (defaultError) {
+        console.error('Error fetching default location:', defaultError);
+        throw defaultError;
+      }
+      
+      // If no default location, try to get any location
+      if (!defaultLocation) {
+        const { data: anyLocation, error: anyError } = await supabase
+          .from('saved_locations')
+          .select('address')
+          .eq('user_id', user?.id)
+          .limit(1)
+          .maybeSingle();
+        
+        if (anyError) {
+          console.error('Error fetching any location:', anyError);
+          throw anyError;
+        }
+        
+        if (anyLocation) {
+          console.log('Found non-default location:', anyLocation);
+          setCurrentLocation(anyLocation.address);
+        } else {
+          // No locations found, keep default text
+          console.log('No locations found');
+        }
+      } else {
+        console.log('Found default location:', defaultLocation);
+        setCurrentLocation(defaultLocation.address);
       }
     } catch (error) {
-      console.error('Error fetching default location:', error);
+      console.error('Error in location fetch process:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch your saved locations',
+        variant: 'destructive',
+      });
     } finally {
       setIsLoadingLocation(false);
     }
   };
 
   const handleLocationSelect = (location: string) => {
+    console.log('Location selected:', location);
     setCurrentLocation(location);
+    setShowLocationModal(false);
   };
 
   return (

@@ -23,7 +23,7 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (isAuthenticated && isOpen) {
+    if (isAuthenticated && isOpen && user?.id) {
       fetchLocations();
     }
   }, [isAuthenticated, isOpen, user?.id]);
@@ -31,8 +31,12 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
   const fetchLocations = async () => {
     setIsLoading(true);
     setError(null);
+    
+    console.log('Fetching locations in modal, user ID:', user?.id);
+    
     try {
       if (!user?.id) {
+        console.log('No user ID found');
         throw new Error('User ID not found');
       }
       
@@ -42,10 +46,14 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
         .eq('user_id', user.id)
         .order('is_default', { ascending: false });
         
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
       
+      console.log('Locations fetched successfully:', data);
       setLocations(data || []);
-      console.log('Fetched locations:', data);
+      
     } catch (error: any) {
       console.error('Error fetching locations:', error);
       setError(error.message);
@@ -63,28 +71,46 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
     if (!newLocation.trim()) return;
     
     try {
+      if (!user?.id) {
+        throw new Error('User ID not found');
+      }
+      
+      console.log('Adding new location:', newLocation);
+      
+      const isFirstLocation = locations.length === 0;
+      
       const { error } = await supabase
         .from('saved_locations')
         .insert([
           {
-            user_id: user?.id,
+            user_id: user.id,
             name: 'Home',
             address: newLocation,
-            is_default: locations.length === 0,
+            is_default: isFirstLocation,
           },
         ]);
         
-      if (error) throw error;
+      if (error) {
+        console.error('Error adding location:', error);
+        throw error;
+      }
       
       toast({
         title: 'Location added',
         description: 'Your location has been saved.',
       });
       
+      // If this is the first location, select it automatically
+      if (isFirstLocation) {
+        onSelectLocation(newLocation);
+      }
+      
       setNewLocation('');
       setIsAdding(false);
       fetchLocations();
+      
     } catch (error: any) {
+      console.error('Error in addLocation:', error);
       toast({
         title: 'Error adding location',
         description: error.message,
@@ -94,6 +120,7 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
   };
 
   const handleSelectLocation = (address: string) => {
+    console.log('Location selected in modal:', address);
     onSelectLocation(address);
     onClose();
   };
@@ -137,37 +164,37 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
                 )}
               </div>
             ) : (
-              <>
+              <div className="max-h-[300px] overflow-y-auto">
                 {locations.map((location) => (
                   <div
                     key={location.id}
-                    className="flex items-center justify-between p-3 border rounded-lg cursor-pointer hover:bg-gray-50"
+                    className="flex items-center justify-between p-3 border rounded-lg cursor-pointer hover:bg-gray-50 mb-2"
                     onClick={() => handleSelectLocation(location.address)}
                   >
                     <div className="flex items-center">
-                      <MapPin className="h-5 w-5 text-primary mr-2" />
+                      <MapPin className="h-5 w-5 text-primary mr-2 flex-shrink-0" />
                       <div>
                         <p className="font-medium">{location.name}</p>
-                        <p className="text-sm text-gray-500">{location.address}</p>
+                        <p className="text-sm text-gray-500 break-words">{location.address}</p>
                       </div>
                     </div>
                     {location.is_default && (
-                      <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">Default</span>
+                      <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded flex-shrink-0 ml-2">Default</span>
                     )}
                   </div>
                 ))}
-                
-                {!isAdding && (
-                  <Button 
-                    variant="outline" 
-                    className="w-full" 
-                    onClick={() => setIsAdding(true)}
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add New Location
-                  </Button>
-                )}
-              </>
+              </div>
+            )}
+            
+            {!isAdding && locations.length > 0 && (
+              <Button 
+                variant="outline" 
+                className="w-full" 
+                onClick={() => setIsAdding(true)}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add New Location
+              </Button>
             )}
             
             {isAdding && (
