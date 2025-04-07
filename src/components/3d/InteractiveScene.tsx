@@ -1,4 +1,3 @@
-
 import React, { useRef, useState, useEffect, Suspense } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { 
@@ -26,7 +25,6 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from '@/components/ui/button';
 
-// Loading component for 3D models
 function Loader() {
   const { progress } = useProgress();
   return (
@@ -46,7 +44,6 @@ interface ModelProps {
   setSelected: (id: string | null) => void;
 }
 
-// Custom cursor tracking for parallax effects
 function useCursor() {
   const [cursor, setCursor] = useState({ x: 0, y: 0 });
   
@@ -65,7 +62,6 @@ function useCursor() {
   return cursor;
 }
 
-// 3D Cube component
 function SmartCube({ product, setHovered, hovered, setSelected }: ModelProps) {
   const meshRef = useRef<THREE.Mesh>(null);
   const isHovered = hovered === product.id;
@@ -73,14 +69,11 @@ function SmartCube({ product, setHovered, hovered, setSelected }: ModelProps) {
   
   useFrame((state, delta) => {
     if (meshRef.current) {
-      // Base rotation
       meshRef.current.rotation.y += delta * 0.3;
       
-      // Floating animation
       const time = state.clock.getElapsedTime();
       meshRef.current.position.y = Math.sin(time) * 0.2 + product.position[1];
       
-      // Parallax effect when hovered
       if (isHovered) {
         gsap.to(meshRef.current.rotation, {
           x: cursor.y * 0.2,
@@ -111,14 +104,12 @@ function SmartCube({ product, setHovered, hovered, setSelected }: ModelProps) {
           emissiveIntensity={isHovered ? 0.3 : 0}
         />
         
-        {/* Icon on the cube face */}
         <Html position={[0, 0, 0.61]} transform scale={0.2} rotation-x={0} rotation-y={0} rotation-z={0} center>
           <div className="w-40 h-40 flex items-center justify-center text-white text-7xl">
             {product.icon}
           </div>
         </Html>
         
-        {/* Label */}
         {isHovered && (
           <Html position={[0, -1, 0]} center distanceFactor={10}>
             <div className="bg-background/90 backdrop-blur-md p-3 rounded-lg shadow-lg border border-primary/20 w-48">
@@ -133,7 +124,6 @@ function SmartCube({ product, setHovered, hovered, setSelected }: ModelProps) {
   );
 }
 
-// 3D Sphere component
 function FreshProduce({ product, setHovered, hovered, setSelected }: ModelProps) {
   const meshRef = useRef<THREE.Mesh>(null);
   const isHovered = hovered === product.id;
@@ -141,15 +131,12 @@ function FreshProduce({ product, setHovered, hovered, setSelected }: ModelProps)
   
   useFrame((state, delta) => {
     if (meshRef.current) {
-      // Base rotation
       meshRef.current.rotation.y += delta * 0.2;
       meshRef.current.rotation.z += delta * 0.1;
       
-      // Floating animation
       const time = state.clock.getElapsedTime();
       meshRef.current.position.y = Math.sin(time * 0.8) * 0.2 + product.position[1];
       
-      // Parallax effect when hovered
       if (isHovered) {
         gsap.to(meshRef.current.rotation, {
           x: cursor.y * 0.3,
@@ -180,14 +167,12 @@ function FreshProduce({ product, setHovered, hovered, setSelected }: ModelProps)
           emissiveIntensity={isHovered ? 0.3 : 0}
         />
         
-        {/* Icon floating inside */}
         <Html position={[0, 0, 0]} transform scale={0.15} rotation-x={0} rotation-y={0} rotation-z={0} center>
           <div className="w-40 h-40 flex items-center justify-center text-white text-7xl">
             {product.icon}
           </div>
         </Html>
         
-        {/* Label */}
         {isHovered && (
           <Html position={[0, -1.5, 0]} center distanceFactor={10}>
             <div className="bg-background/90 backdrop-blur-md p-3 rounded-lg shadow-lg border border-primary/20 w-48">
@@ -202,28 +187,23 @@ function FreshProduce({ product, setHovered, hovered, setSelected }: ModelProps)
   );
 }
 
-// 3D Laptop component
 function Laptop({ product, setHovered, hovered, setSelected }: ModelProps) {
   const groupRef = useRef<THREE.Group>(null);
-  const screenRef = useRef<THREE.Mesh>(null);
+  const screenRef = useRef<THREE.Group>(null);
   const isHovered = hovered === product.id;
   const cursor = useCursor();
   const { clock } = useThree();
   
   useFrame((state) => {
     if (groupRef.current && screenRef.current) {
-      // Base floating animation
       const time = clock.getElapsedTime();
       groupRef.current.position.y = Math.sin(time * 0.6) * 0.15 + product.position[1];
       
-      // Subtle rotation
       groupRef.current.rotation.y += 0.002;
       
-      // Open/close laptop based on scroll - simulate with time
       const openAmount = Math.min(Math.max((Math.sin(time * 0.2) + 1) / 2, 0), 1);
       screenRef.current.rotation.x = -Math.PI/6 + (Math.PI/2.5) * openAmount;
       
-      // Parallax effect when hovered
       if (isHovered) {
         gsap.to(groupRef.current.rotation, {
           x: cursor.y * 0.1,
@@ -244,7 +224,6 @@ function Laptop({ product, setHovered, hovered, setSelected }: ModelProps) {
       onClick={() => setSelected(product.id)}
       scale={isHovered ? 1.2 : 1}
     >
-      {/* Base */}
       <mesh position={[0, -0.1, 0]}>
         <boxGeometry args={[2, 0.1, 1.5]} />
         <meshStandardMaterial 
@@ -256,13 +235,11 @@ function Laptop({ product, setHovered, hovered, setSelected }: ModelProps) {
         />
       </mesh>
       
-      {/* Keyboard */}
       <mesh position={[0, -0.03, 0]}>
         <boxGeometry args={[1.8, 0.01, 1.3]} />
         <meshStandardMaterial color="#444444" />
       </mesh>
       
-      {/* Screen */}
       <group position={[0, 0, -0.7]} rotation={[-Math.PI/6, 0, 0]} ref={screenRef}>
         <mesh position={[0, 0.6, 0]}>
           <boxGeometry args={[2, 1.2, 0.05]} />
@@ -275,7 +252,6 @@ function Laptop({ product, setHovered, hovered, setSelected }: ModelProps) {
           />
         </mesh>
         
-        {/* Screen display */}
         <mesh position={[0, 0.6, 0.03]}>
           <boxGeometry args={[1.9, 1.1, 0.01]} />
           <meshStandardMaterial 
@@ -286,7 +262,6 @@ function Laptop({ product, setHovered, hovered, setSelected }: ModelProps) {
             roughness={0.1} 
           />
           
-          {/* Screen content */}
           <Html position={[0, 0, 0.01]} transform scale={0.13} rotation-x={0} rotation-y={0} rotation-z={0} center>
             <div className="w-[600px] h-[350px] flex flex-col items-center justify-center bg-primary/20 text-primary rounded-md">
               <div className="text-5xl mb-4">{product.icon}</div>
@@ -297,7 +272,6 @@ function Laptop({ product, setHovered, hovered, setSelected }: ModelProps) {
         </mesh>
       </group>
       
-      {/* Label */}
       {isHovered && (
         <Html position={[0, -1, 0]} center distanceFactor={10}>
           <div className="bg-background/90 backdrop-blur-md p-3 rounded-lg shadow-lg border border-primary/20 w-48">
@@ -311,7 +285,6 @@ function Laptop({ product, setHovered, hovered, setSelected }: ModelProps) {
   );
 }
 
-// 3D smartphone component
 function Smartphone({ product, setHovered, hovered, setSelected }: ModelProps) {
   const groupRef = useRef<THREE.Group>(null);
   const isHovered = hovered === product.id;
@@ -319,14 +292,11 @@ function Smartphone({ product, setHovered, hovered, setSelected }: ModelProps) {
   
   useFrame((state, delta) => {
     if (groupRef.current) {
-      // Base floating animation
       const time = state.clock.getElapsedTime();
       groupRef.current.position.y = Math.sin(time * 0.7) * 0.15 + product.position[1];
       
-      // Subtle base rotation
       groupRef.current.rotation.y += delta * 0.03;
       
-      // Parallax effect on mouse move (more pronounced when hovered)
       if (isHovered) {
         gsap.to(groupRef.current.rotation, {
           x: cursor.y * 0.3,
@@ -334,7 +304,6 @@ function Smartphone({ product, setHovered, hovered, setSelected }: ModelProps) {
           duration: 0.5
         });
       } else {
-        // Still have some subtle movement even when not hovered
         gsap.to(groupRef.current.rotation, {
           x: cursor.y * 0.05,
           y: -cursor.x * 0.1 + time * 0.03,
@@ -353,7 +322,6 @@ function Smartphone({ product, setHovered, hovered, setSelected }: ModelProps) {
       onClick={() => setSelected(product.id)}
       scale={isHovered ? 1.2 : 1}
     >
-      {/* Phone body */}
       <mesh position={[0, 0, 0]}>
         <boxGeometry args={[0.7, 1.5, 0.08]} />
         <meshStandardMaterial 
@@ -365,7 +333,6 @@ function Smartphone({ product, setHovered, hovered, setSelected }: ModelProps) {
         />
       </mesh>
       
-      {/* Phone screen */}
       <mesh position={[0, 0, 0.04]}>
         <boxGeometry args={[0.65, 1.4, 0.01]} />
         <meshStandardMaterial 
@@ -376,7 +343,6 @@ function Smartphone({ product, setHovered, hovered, setSelected }: ModelProps) {
           roughness={0.1} 
         />
         
-        {/* Screen content */}
         <Html position={[0, 0, 0.01]} transform scale={0.08} rotation-x={0} rotation-y={0} rotation-z={0} center>
           <div className="w-[300px] h-[600px] flex flex-col items-center justify-center bg-primary/10 text-primary rounded-md">
             <div className="text-6xl mb-6">{product.icon}</div>
@@ -386,13 +352,11 @@ function Smartphone({ product, setHovered, hovered, setSelected }: ModelProps) {
         </Html>
       </mesh>
       
-      {/* Camera bump */}
       <mesh position={[0.2, 0.5, -0.05]}>
         <cylinderGeometry args={[0.1, 0.1, 0.1, 16]} />
         <meshStandardMaterial color="#222222" metalness={0.8} roughness={0.2} />
       </mesh>
       
-      {/* Label */}
       {isHovered && (
         <Html position={[0, -1.2, 0]} center distanceFactor={10}>
           <div className="bg-background/90 backdrop-blur-md p-3 rounded-lg shadow-lg border border-primary/20 w-48">
@@ -406,7 +370,6 @@ function Smartphone({ product, setHovered, hovered, setSelected }: ModelProps) {
   );
 }
 
-// Enhanced product detail dialog
 function ProductDetailDialog({ selectedProduct, onClose }: { 
   selectedProduct: ProductModel | null;
   onClose: () => void;
@@ -460,7 +423,6 @@ function ProductDetailDialog({ selectedProduct, onClose }: {
   );
 }
 
-// The main 3D scene component
 export function InteractiveScene() {
   const [hovered, setHovered] = useState<string | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<ProductModel | null>(null);
@@ -541,7 +503,6 @@ export function InteractiveScene() {
         </Suspense>
       </Canvas>
       
-      {/* Zoom controls */}
       <div className="absolute bottom-4 right-4 flex space-x-2">
         <Button onClick={handleZoomIn} variant="outline" size="icon" className="bg-white/80 backdrop-blur-sm">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-zoom-in"><circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/><line x1="11" x2="11" y1="8" y2="14"/><line x1="8" x2="14" y1="11" y2="11"/></svg>
@@ -551,7 +512,6 @@ export function InteractiveScene() {
         </Button>
       </div>
       
-      {/* Legend for mobile users */}
       {isMobile && (
         <div className="absolute bottom-4 left-4 bg-background/80 backdrop-blur-sm p-3 rounded-lg border border-primary/20">
           <h4 className="text-sm font-medium mb-1">Tap objects to explore:</h4>
@@ -571,13 +531,11 @@ export function InteractiveScene() {
         </div>
       )}
       
-      {/* Product details dialog */}
       <ProductDetailDialog 
         selectedProduct={selectedProduct} 
         onClose={() => setSelectedProduct(null)} 
       />
 
-      {/* Main controls panel - Fixed position to avoid overlapping */}
       <div className="absolute top-4 left-4 z-10 bg-background/90 backdrop-blur-sm p-3 rounded-lg border border-primary/20 max-w-[200px]">
         <h4 className="text-sm font-medium mb-2">Explore Products:</h4>
         <div className="space-y-2">
