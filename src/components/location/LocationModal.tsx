@@ -3,15 +3,23 @@ import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { MapPin, Plus, Search, Loader2, Check, X } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { Form, FormField, FormItem, FormLabel, FormControl } from '@/components/ui/form';
+import { MapPin, Search, Loader2, Check, X } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { useForm } from 'react-hook-form';
 
 interface LocationModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSelectLocation: (location: string) => void;
+}
+
+interface LocationFormValues {
+  address: string;
+  additionalDetails: string;
 }
 
 const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelectLocation }) => {
@@ -22,6 +30,15 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [detectingLocation, setDetectingLocation] = useState(false);
+  const [detectedCoordinates, setDetectedCoordinates] = useState<{lat: number; lng: number} | null>(null);
+  const [showAddressForm, setShowAddressForm] = useState(false);
+  
+  const form = useForm<LocationFormValues>({
+    defaultValues: {
+      address: '',
+      additionalDetails: ''
+    }
+  });
 
   // Fetch locations when modal opens
   useEffect(() => {
@@ -29,6 +46,14 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
       fetchLocations();
     }
   }, [isAuthenticated, isOpen, user?.id]);
+
+  // Update form values when detected coordinates change
+  useEffect(() => {
+    if (detectedCoordinates) {
+      form.setValue('address', `Detected Location (${detectedCoordinates.lat.toFixed(4)}, ${detectedCoordinates.lng.toFixed(4)})`);
+      setShowAddressForm(true);
+    }
+  }, [detectedCoordinates, form]);
 
   const fetchLocations = async () => {
     if (!user?.id) return;
@@ -55,8 +80,8 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
     }
   };
 
-  const addLocation = async (address: string) => {
-    if (!address.trim() || !user?.id) return;
+  const addLocation = async (addressData: LocationFormValues) => {
+    if (!addressData.address.trim() || !user?.id) return;
     
     setIsAdding(true);
     
@@ -69,7 +94,7 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
           {
             user_id: user.id,
             name: 'Home',
-            address: address,
+            address: addressData.address + (addressData.additionalDetails ? ` (${addressData.additionalDetails})` : ''),
             is_default: isFirstLocation,
           },
         ]);
@@ -82,11 +107,10 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
       });
       
       // If this is the first location, select it automatically
-      if (isFirstLocation) {
-        onSelectLocation(address);
-      }
+      handleSelectLocation(addressData.address + (addressData.additionalDetails ? ` (${addressData.additionalDetails})` : ''));
       
       setSearchQuery('');
+      setShowAddressForm(false);
       fetchLocations();
       
     } catch (error: any) {
@@ -146,29 +170,10 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
     
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        async (position) => {
+        (position) => {
           const { latitude, longitude } = position.coords;
-          
-          try {
-            // For demo purposes, we'll just use a placeholder address
-            // In a real app, you'd use a reverse geocoding service
-            const detectedAddress = `Detected Location (${latitude.toFixed(2)}, ${longitude.toFixed(2)})`;
-            
-            if (isAuthenticated && user?.id) {
-              await addLocation(detectedAddress);
-            }
-            
-            handleSelectLocation(detectedAddress);
-          } catch (error) {
-            console.error('Error handling detected location:', error);
-            toast({
-              title: 'Error',
-              description: 'Failed to save your detected location.',
-              variant: 'destructive',
-            });
-          } finally {
-            setDetectingLocation(false);
-          }
+          setDetectedCoordinates({ lat: latitude, lng: longitude });
+          setDetectingLocation(false);
         },
         (error) => {
           console.error('Geolocation error:', error);
@@ -190,6 +195,14 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
     }
   };
 
+  const onSubmitLocationForm = (data: LocationFormValues) => {
+    if (isAuthenticated && user?.id) {
+      addLocation(data);
+    } else {
+      handleSelectLocation(data.address + (data.additionalDetails ? ` (${data.additionalDetails})` : ''));
+    }
+  };
+
   const filteredLocations = locations.filter(location => 
     location.address.toLowerCase().includes(searchQuery.toLowerCase()) ||
     location.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -201,6 +214,8 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
         onClose();
         setSearchQuery('');
         setIsAdding(false);
+        setShowAddressForm(false);
+        setDetectedCoordinates(null);
       }
     }}>
       <DialogContent className="sm:max-w-md bg-white p-0 overflow-hidden">
@@ -215,7 +230,66 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
         </div>
         
         <div className="p-4 flex flex-col gap-4">
-          {isAuthenticated ? (
+          {showAddressForm ? (
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmitLocationForm)} className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="address"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Address</FormLabel>
+                      <FormControl>
+                        <Input {...field} placeholder="Your address" />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="additionalDetails"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Additional Details</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          {...field} 
+                          placeholder="Apartment number, landmark, etc." 
+                          className="min-h-[80px]"
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                
+                <div className="flex gap-2">
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => {
+                      setShowAddressForm(false);
+                      setDetectedCoordinates(null);
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    type="submit" 
+                    className="flex-1"
+                    disabled={isAdding}
+                  >
+                    {isAdding ? (
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    ) : (
+                      <Check className="h-4 w-4 mr-2" />
+                    )}
+                    Confirm Location
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          ) : isAuthenticated ? (
             <>
               <div className="flex gap-4">
                 <Button 
@@ -300,7 +374,10 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
                   ) : searchQuery ? (
                     <div className="text-center py-10">
                       <p className="text-gray-500 mb-4">No locations match "{searchQuery}"</p>
-                      <Button onClick={() => addLocation(searchQuery)}>
+                      <Button onClick={() => {
+                        form.setValue('address', searchQuery);
+                        setShowAddressForm(true);
+                      }}>
                         Add "{searchQuery}" as a new location
                       </Button>
                     </div>
@@ -349,10 +426,13 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
               
               {searchQuery.trim() && (
                 <Button
-                  onClick={() => handleSelectLocation(searchQuery)}
+                  onClick={() => {
+                    form.setValue('address', searchQuery);
+                    setShowAddressForm(true);
+                  }}
                   className="w-full"
                 >
-                  Confirm Location
+                  Add Details
                 </Button>
               )}
               

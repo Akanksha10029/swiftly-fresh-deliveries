@@ -29,6 +29,14 @@ export const NavigationActions = () => {
     }
   }, [isAuthenticated, user?.id]);
 
+  // Also fetch location from localStorage when component mounts
+  useEffect(() => {
+    const savedLocation = localStorage.getItem('userLocation');
+    if (savedLocation) {
+      setCurrentLocation(savedLocation);
+    }
+  }, []);
+
   const fetchDefaultLocation = async () => {
     if (!user?.id) return;
     
@@ -62,9 +70,11 @@ export const NavigationActions = () => {
         
         if (anyLocation) {
           setCurrentLocation(anyLocation.address);
+          localStorage.setItem('userLocation', anyLocation.address);
         }
       } else {
         setCurrentLocation(defaultLocation.address);
+        localStorage.setItem('userLocation', defaultLocation.address);
       }
     } catch (error) {
       console.error('Error fetching location:', error);
@@ -75,7 +85,13 @@ export const NavigationActions = () => {
 
   const handleLocationSelect = (location: string) => {
     setCurrentLocation(location);
+    localStorage.setItem('userLocation', location);
     setShowLocationModal(false);
+    
+    toast({
+      title: 'Location updated',
+      description: 'Your delivery location has been updated.',
+    });
   };
 
   return (
