@@ -1,25 +1,22 @@
 
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Form, FormField, FormItem, FormLabel, FormControl } from '@/components/ui/form';
-import { MapPin, Search, Loader2, Check, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useForm } from 'react-hook-form';
 
+// Import our new component modules
+import LocationForm, { LocationFormValues } from './modals/LocationForm';
+import LocationList from './modals/LocationList';
+import LocationDetection from './modals/LocationDetection';
+import AuthenticatedLocationSearch from './modals/AuthenticatedLocationSearch';
+
 interface LocationModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSelectLocation: (location: string) => void;
-}
-
-interface LocationFormValues {
-  address: string;
-  additionalDetails: string;
 }
 
 const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelectLocation }) => {
@@ -203,10 +200,15 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
     }
   };
 
-  const filteredLocations = locations.filter(location => 
-    location.address.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    location.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const handleAddNewLocation = (query: string) => {
+    form.setValue('address', query);
+    setShowAddressForm(true);
+  };
+
+  const handleSignIn = () => {
+    onClose();
+    window.location.href = '/auth/signin';
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => {
@@ -231,227 +233,45 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
         
         <div className="p-4 flex flex-col gap-4">
           {showAddressForm ? (
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmitLocationForm)} className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="address"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Address</FormLabel>
-                      <FormControl>
-                        <Input {...field} placeholder="Your address" />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="additionalDetails"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Additional Details</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          {...field} 
-                          placeholder="Apartment number, landmark, etc." 
-                          className="min-h-[80px]"
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-                
-                <div className="flex gap-2">
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    onClick={() => {
-                      setShowAddressForm(false);
-                      setDetectedCoordinates(null);
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                  <Button 
-                    type="submit" 
-                    className="flex-1"
-                    disabled={isAdding}
-                  >
-                    {isAdding ? (
-                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    ) : (
-                      <Check className="h-4 w-4 mr-2" />
-                    )}
-                    Confirm Location
-                  </Button>
-                </div>
-              </form>
-            </Form>
+            <LocationForm 
+              form={form}
+              onSubmit={onSubmitLocationForm}
+              onCancel={() => {
+                setShowAddressForm(false);
+                setDetectedCoordinates(null);
+              }}
+              isAdding={isAdding}
+            />
           ) : isAuthenticated ? (
             <>
-              <div className="flex gap-4">
-                <Button 
-                  variant="default" 
-                  className="flex-1 gap-2 bg-primary"
-                  onClick={detectLocation}
-                  disabled={detectingLocation}
-                >
-                  {detectingLocation ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <MapPin className="h-4 w-4" />
-                  )}
-                  Detect my location
-                </Button>
-                
-                <div className="flex items-center">
-                  <div className="text-gray-400">OR</div>
-                </div>
-                
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                  <Input
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search delivery location"
-                    className="pl-9"
-                  />
-                </div>
-              </div>
+              <AuthenticatedLocationSearch
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                onDetectLocation={detectLocation}
+                detectingLocation={detectingLocation}
+              />
               
-              {isLoading ? (
-                <div className="flex justify-center py-8">
-                  <div className="flex flex-col items-center">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
-                    <p className="text-gray-600">Loading locations...</p>
-                  </div>
-                </div>
-              ) : error ? (
-                <div className="text-center py-4">
-                  <p className="text-red-500 mb-2">{error}</p>
-                  <Button onClick={fetchLocations} variant="outline">Try Again</Button>
-                </div>
-              ) : (
-                <>
-                  {filteredLocations.length > 0 ? (
-                    <div className="max-h-[300px] overflow-y-auto bg-gray-50 rounded-lg p-2">
-                      {filteredLocations.map((location) => (
-                        <div
-                          key={location.id}
-                          className="flex items-center justify-between p-3 bg-white rounded-lg hover:bg-gray-50 mb-2 cursor-pointer"
-                          onClick={() => handleSelectLocation(location.address)}
-                        >
-                          <div className="flex items-center">
-                            <MapPin className="h-5 w-5 text-primary mr-2 flex-shrink-0" />
-                            <div>
-                              <p className="font-medium">{location.name}</p>
-                              <p className="text-sm text-gray-500 break-words">{location.address}</p>
-                            </div>
-                          </div>
-                          {!location.is_default && (
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              className="ml-2"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                makeDefault(location.id);
-                              }}
-                            >
-                              Set Default
-                            </Button>
-                          )}
-                          {location.is_default && (
-                            <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
-                              Default
-                            </span>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  ) : searchQuery ? (
-                    <div className="text-center py-10">
-                      <p className="text-gray-500 mb-4">No locations match "{searchQuery}"</p>
-                      <Button onClick={() => {
-                        form.setValue('address', searchQuery);
-                        setShowAddressForm(true);
-                      }}>
-                        Add "{searchQuery}" as a new location
-                      </Button>
-                    </div>
-                  ) : locations.length === 0 ? (
-                    <div className="text-center py-10">
-                      <p className="text-gray-500 mb-4">You haven't saved any locations yet</p>
-                      <p className="text-sm text-gray-400 mb-4">
-                        Save locations for faster checkout in the future
-                      </p>
-                    </div>
-                  ) : null}
-                </>
-              )}
+              <LocationList
+                locations={locations}
+                isLoading={isLoading}
+                error={error}
+                searchQuery={searchQuery}
+                onSelectLocation={handleSelectLocation}
+                onMakeDefault={makeDefault}
+                onRetry={fetchLocations}
+                onAddNewLocation={handleAddNewLocation}
+              />
             </>
           ) : (
-            <div className="space-y-4 py-4">
-              <Button 
-                variant="default" 
-                className="w-full gap-2"
-                onClick={detectLocation}
-                disabled={detectingLocation}
-              >
-                {detectingLocation ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <MapPin className="h-4 w-4" />
-                )}
-                Detect my location
-              </Button>
-              
-              <div className="flex items-center justify-center gap-4">
-                <div className="border-t border-gray-200 flex-1"></div>
-                <span className="text-gray-400 text-sm">OR</span>
-                <div className="border-t border-gray-200 flex-1"></div>
-              </div>
-              
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <Input
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Enter your full address"
-                  className="pl-9"
-                />
-              </div>
-              
-              {searchQuery.trim() && (
-                <Button
-                  onClick={() => {
-                    form.setValue('address', searchQuery);
-                    setShowAddressForm(true);
-                  }}
-                  className="w-full"
-                >
-                  Add Details
-                </Button>
-              )}
-              
-              <div className="text-center mt-4">
-                <p className="text-sm text-gray-500">
-                  Sign in to save your locations for faster checkout
-                </p>
-                <Button
-                  variant="outline"
-                  className="mt-2"
-                  onClick={() => {
-                    onClose();
-                    window.location.href = '/auth/signin';
-                  }}
-                >
-                  Sign In
-                </Button>
-              </div>
-            </div>
+            <LocationDetection
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              onDetectLocation={detectLocation}
+              onAddDetails={() => handleAddNewLocation(searchQuery)}
+              detectingLocation={detectingLocation}
+              isAuthenticated={isAuthenticated}
+              onSignIn={handleSignIn}
+            />
           )}
         </div>
       </DialogContent>
