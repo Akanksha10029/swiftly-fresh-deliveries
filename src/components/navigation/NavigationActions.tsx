@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { MapPin, User, ShoppingCart, LogOut, Heart } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
@@ -25,7 +26,14 @@ export const NavigationActions = () => {
   useEffect(() => {
     const fetchLocation = async () => {
       if (isAuthenticated && user?.id) {
-        await fetchDefaultLocation();
+        try {
+          setIsLoadingLocation(true);
+          await fetchDefaultLocation();
+        } catch (error) {
+          console.error('Error in fetchLocation:', error);
+        } finally {
+          setIsLoadingLocation(false);
+        }
       }
     };
     
@@ -33,15 +41,19 @@ export const NavigationActions = () => {
   }, [isAuthenticated, user?.id]);
 
   const fetchDefaultLocation = async () => {
-    setIsLoadingLocation(true);
     console.log('Fetching default location...');
     
     try {
+      if (!user?.id) {
+        console.log('No user ID found');
+        return;
+      }
+      
       // First try to get the default location
       const { data: defaultLocation, error: defaultError } = await supabase
         .from('saved_locations')
         .select('address')
-        .eq('user_id', user?.id)
+        .eq('user_id', user.id)
         .eq('is_default', true)
         .maybeSingle();
       
@@ -55,7 +67,7 @@ export const NavigationActions = () => {
         const { data: anyLocation, error: anyError } = await supabase
           .from('saved_locations')
           .select('address')
-          .eq('user_id', user?.id)
+          .eq('user_id', user.id)
           .limit(1)
           .maybeSingle();
         
@@ -70,6 +82,7 @@ export const NavigationActions = () => {
         } else {
           // No locations found, keep default text
           console.log('No locations found');
+          setCurrentLocation('Set Location');
         }
       } else {
         console.log('Found default location:', defaultLocation);
@@ -82,8 +95,7 @@ export const NavigationActions = () => {
         description: 'Failed to fetch your saved locations',
         variant: 'destructive',
       });
-    } finally {
-      setIsLoadingLocation(false);
+      setCurrentLocation('Set Location');
     }
   };
 
