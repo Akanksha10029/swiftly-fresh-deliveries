@@ -1,9 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { MapPin, Plus, Loader2, Check } from 'lucide-react';
+import { MapPin, Plus, Search, Loader2, Check, X } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
@@ -17,10 +17,11 @@ interface LocationModalProps {
 const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelectLocation }) => {
   const { user, isAuthenticated } = useAuth();
   const [locations, setLocations] = useState<any[]>([]);
-  const [newLocation, setNewLocation] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [isAdding, setIsAdding] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [detectingLocation, setDetectingLocation] = useState(false);
 
   // Fetch locations when modal opens
   useEffect(() => {
@@ -35,8 +36,6 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
     setIsLoading(true);
     setError(null);
     
-    console.log('Fetching locations in modal, user ID:', user?.id);
-    
     try {
       const { data, error } = await supabase
         .from('saved_locations')
@@ -44,35 +43,24 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
         .eq('user_id', user.id)
         .order('is_default', { ascending: false });
         
-      if (error) {
-        console.error('Supabase error:', error);
-        throw error;
-      }
+      if (error) throw error;
       
-      console.log('Locations fetched successfully:', data);
       setLocations(data || []);
       
     } catch (error: any) {
       console.error('Error fetching locations:', error);
-      setError(error.message);
-      toast({
-        title: 'Error fetching locations',
-        description: error.message,
-        variant: 'destructive',
-      });
+      setError('Failed to fetch locations. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const addLocation = async () => {
-    if (!newLocation.trim() || !user?.id) return;
+  const addLocation = async (address: string) => {
+    if (!address.trim() || !user?.id) return;
     
     setIsAdding(true);
     
     try {
-      console.log('Adding new location:', newLocation);
-      
       const isFirstLocation = locations.length === 0;
       
       const { error } = await supabase
@@ -81,15 +69,12 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
           {
             user_id: user.id,
             name: 'Home',
-            address: newLocation,
+            address: address,
             is_default: isFirstLocation,
           },
         ]);
         
-      if (error) {
-        console.error('Error adding location:', error);
-        throw error;
-      }
+      if (error) throw error;
       
       toast({
         title: 'Location added',
@@ -98,17 +83,17 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
       
       // If this is the first location, select it automatically
       if (isFirstLocation) {
-        onSelectLocation(newLocation);
+        onSelectLocation(address);
       }
       
-      setNewLocation('');
+      setSearchQuery('');
       fetchLocations();
       
     } catch (error: any) {
-      console.error('Error in addLocation:', error);
+      console.error('Error adding location:', error);
       toast({
-        title: 'Error adding location',
-        description: error.message,
+        title: 'Error',
+        description: 'Failed to add location.',
         variant: 'destructive',
       });
     } finally {
@@ -117,7 +102,6 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
   };
 
   const handleSelectLocation = (address: string) => {
-    console.log('Location selected in modal:', address);
     onSelectLocation(address);
     onClose();
   };
@@ -141,7 +125,7 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
       if (error) throw error;
       
       toast({
-        title: 'Default location updated',
+        title: 'Default updated',
         description: 'Your default location has been updated.',
       });
       
@@ -151,138 +135,245 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
       console.error('Error updating default location:', error);
       toast({
         title: 'Error',
-        description: error.message,
+        description: 'Failed to update default location.',
         variant: 'destructive',
       });
     }
   };
 
+  const detectLocation = () => {
+    setDetectingLocation(true);
+    
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+          
+          try {
+            // For demo purposes, we'll just use a placeholder address
+            // In a real app, you'd use a reverse geocoding service
+            const detectedAddress = `Detected Location (${latitude.toFixed(2)}, ${longitude.toFixed(2)})`;
+            
+            if (isAuthenticated && user?.id) {
+              await addLocation(detectedAddress);
+            }
+            
+            handleSelectLocation(detectedAddress);
+          } catch (error) {
+            console.error('Error handling detected location:', error);
+            toast({
+              title: 'Error',
+              description: 'Failed to save your detected location.',
+              variant: 'destructive',
+            });
+          } finally {
+            setDetectingLocation(false);
+          }
+        },
+        (error) => {
+          console.error('Geolocation error:', error);
+          toast({
+            title: 'Location detection failed',
+            description: 'Please grant location access or enter your address manually.',
+            variant: 'destructive',
+          });
+          setDetectingLocation(false);
+        }
+      );
+    } else {
+      toast({
+        title: 'Geolocation not supported',
+        description: 'Your browser does not support location detection.',
+        variant: 'destructive',
+      });
+      setDetectingLocation(false);
+    }
+  };
+
+  const filteredLocations = locations.filter(location => 
+    location.address.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    location.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => {
-      if (!open) onClose();
+      if (!open) {
+        onClose();
+        setSearchQuery('');
+        setIsAdding(false);
+      }
     }}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Select Location</DialogTitle>
-          <DialogDescription>
-            {isAuthenticated ? 'Choose from your saved locations or add a new one.' : 'Enter your delivery location.'}
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="sm:max-w-md bg-white p-0 overflow-hidden">
+        <div className="flex items-center justify-between p-4 border-b">
+          <DialogTitle className="text-lg">Change Location</DialogTitle>
+          <button 
+            onClick={onClose}
+            className="rounded-full hover:bg-gray-100 p-1"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
         
-        {isAuthenticated ? (
-          <div className="space-y-4">
-            {isLoading ? (
-              <div className="flex flex-col items-center justify-center py-6">
-                <Loader2 className="h-6 w-6 animate-spin text-primary mb-2" />
-                <p>Loading locations...</p>
-              </div>
-            ) : error ? (
-              <div className="text-center py-4 text-red-500">
-                <p>{error}</p>
-                <Button variant="outline" className="mt-2" onClick={fetchLocations}>
-                  Try Again
+        <div className="p-4 flex flex-col gap-4">
+          {isAuthenticated ? (
+            <>
+              <div className="flex gap-4">
+                <Button 
+                  variant="default" 
+                  className="flex-1 gap-2 bg-primary"
+                  onClick={detectLocation}
+                  disabled={detectingLocation}
+                >
+                  {detectingLocation ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <MapPin className="h-4 w-4" />
+                  )}
+                  Detect my location
                 </Button>
-              </div>
-            ) : locations.length === 0 ? (
-              <div className="text-center py-4">
-                <p className="mb-4">You don't have any saved locations yet.</p>
-                {!isAdding && (
-                  <Button 
-                    variant="outline" 
-                    onClick={() => setIsAdding(true)}
-                    className="mx-auto"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Your First Location
-                  </Button>
-                )}
-              </div>
-            ) : (
-              <div className="max-h-[300px] overflow-y-auto">
-                {locations.map((location) => (
-                  <div
-                    key={location.id}
-                    className="flex items-center justify-between p-3 border rounded-lg cursor-pointer hover:bg-gray-50 mb-2"
-                  >
-                    <div 
-                      className="flex items-center flex-1"
-                      onClick={() => handleSelectLocation(location.address)}
-                    >
-                      <MapPin className="h-5 w-5 text-primary mr-2 flex-shrink-0" />
-                      <div>
-                        <p className="font-medium">{location.name}</p>
-                        <p className="text-sm text-gray-500 break-words">{location.address}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center ml-2">
-                      {location.is_default ? (
-                        <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded flex-shrink-0">Default</span>
-                      ) : (
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="text-xs h-7"
-                          onClick={() => makeDefault(location.id)}
-                        >
-                          Set Default
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-            
-            {!isAdding && locations.length > 0 && (
-              <Button 
-                variant="outline" 
-                className="w-full" 
-                onClick={() => setIsAdding(true)}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add New Location
-              </Button>
-            )}
-            
-            {isAdding && (
-              <div className="flex flex-col space-y-2">
-                <Input
-                  value={newLocation}
-                  onChange={(e) => setNewLocation(e.target.value)}
-                  placeholder="Enter your address"
-                />
-                <div className="flex space-x-2">
-                  <Button 
-                    onClick={addLocation}
-                    disabled={!newLocation.trim()}
-                  >
-                    {isAdding ? (
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    ) : (
-                      <Check className="h-4 w-4 mr-2" />
-                    )}
-                    Save
-                  </Button>
-                  <Button variant="outline" onClick={() => setIsAdding(false)}>Cancel</Button>
+                
+                <div className="flex items-center">
+                  <div className="text-gray-400">OR</div>
+                </div>
+                
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <Input
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search delivery location"
+                    className="pl-9"
+                  />
                 </div>
               </div>
-            )}
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <Input
-              value={newLocation}
-              onChange={(e) => setNewLocation(e.target.value)}
-              placeholder="Enter your address"
-            />
-            <Button 
-              onClick={() => handleSelectLocation(newLocation)}
-              disabled={!newLocation.trim()}
-            >
-              Confirm Location
-            </Button>
-          </div>
-        )}
+              
+              {isLoading ? (
+                <div className="flex justify-center py-8">
+                  <div className="flex flex-col items-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
+                    <p className="text-gray-600">Loading locations...</p>
+                  </div>
+                </div>
+              ) : error ? (
+                <div className="text-center py-4">
+                  <p className="text-red-500 mb-2">{error}</p>
+                  <Button onClick={fetchLocations} variant="outline">Try Again</Button>
+                </div>
+              ) : (
+                <>
+                  {filteredLocations.length > 0 ? (
+                    <div className="max-h-[300px] overflow-y-auto bg-gray-50 rounded-lg p-2">
+                      {filteredLocations.map((location) => (
+                        <div
+                          key={location.id}
+                          className="flex items-center justify-between p-3 bg-white rounded-lg hover:bg-gray-50 mb-2 cursor-pointer"
+                          onClick={() => handleSelectLocation(location.address)}
+                        >
+                          <div className="flex items-center">
+                            <MapPin className="h-5 w-5 text-primary mr-2 flex-shrink-0" />
+                            <div>
+                              <p className="font-medium">{location.name}</p>
+                              <p className="text-sm text-gray-500 break-words">{location.address}</p>
+                            </div>
+                          </div>
+                          {!location.is_default && (
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              className="ml-2"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                makeDefault(location.id);
+                              }}
+                            >
+                              Set Default
+                            </Button>
+                          )}
+                          {location.is_default && (
+                            <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                              Default
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : searchQuery ? (
+                    <div className="text-center py-10">
+                      <p className="text-gray-500 mb-4">No locations match "{searchQuery}"</p>
+                      <Button onClick={() => addLocation(searchQuery)}>
+                        Add "{searchQuery}" as a new location
+                      </Button>
+                    </div>
+                  ) : locations.length === 0 ? (
+                    <div className="text-center py-10">
+                      <p className="text-gray-500 mb-4">You haven't saved any locations yet</p>
+                      <p className="text-sm text-gray-400 mb-4">
+                        Save locations for faster checkout in the future
+                      </p>
+                    </div>
+                  ) : null}
+                </>
+              )}
+            </>
+          ) : (
+            <div className="space-y-4 py-4">
+              <Button 
+                variant="default" 
+                className="w-full gap-2"
+                onClick={detectLocation}
+                disabled={detectingLocation}
+              >
+                {detectingLocation ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <MapPin className="h-4 w-4" />
+                )}
+                Detect my location
+              </Button>
+              
+              <div className="flex items-center justify-center gap-4">
+                <div className="border-t border-gray-200 flex-1"></div>
+                <span className="text-gray-400 text-sm">OR</span>
+                <div className="border-t border-gray-200 flex-1"></div>
+              </div>
+              
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Input
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Enter your full address"
+                  className="pl-9"
+                />
+              </div>
+              
+              {searchQuery.trim() && (
+                <Button
+                  onClick={() => handleSelectLocation(searchQuery)}
+                  className="w-full"
+                >
+                  Confirm Location
+                </Button>
+              )}
+              
+              <div className="text-center mt-4">
+                <p className="text-sm text-gray-500">
+                  Sign in to save your locations for faster checkout
+                </p>
+                <Button
+                  variant="outline"
+                  className="mt-2"
+                  onClick={() => {
+                    onClose();
+                    window.location.href = '/auth/signin';
+                  }}
+                >
+                  Sign In
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
       </DialogContent>
     </Dialog>
   );

@@ -19,36 +19,22 @@ export const NavigationActions = () => {
   const { isAuthenticated, signOut, user } = useAuth();
   const navigate = useNavigate();
   const [showLocationModal, setShowLocationModal] = useState(false);
-  const [currentLocation, setCurrentLocation] = useState<string>('Set Location');
+  const [currentLocation, setCurrentLocation] = useState<string>('Select Location');
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
 
   // Fetch default location when authenticated
   useEffect(() => {
-    const fetchLocation = async () => {
-      if (isAuthenticated && user?.id) {
-        try {
-          setIsLoadingLocation(true);
-          await fetchDefaultLocation();
-        } catch (error) {
-          console.error('Error in fetchLocation:', error);
-        } finally {
-          setIsLoadingLocation(false);
-        }
-      }
-    };
-    
-    fetchLocation();
+    if (isAuthenticated && user?.id) {
+      fetchDefaultLocation();
+    }
   }, [isAuthenticated, user?.id]);
 
   const fetchDefaultLocation = async () => {
-    console.log('Fetching default location...');
+    if (!user?.id) return;
+    
+    setIsLoadingLocation(true);
     
     try {
-      if (!user?.id) {
-        console.log('No user ID found');
-        return;
-      }
-      
       // First try to get the default location
       const { data: defaultLocation, error: defaultError } = await supabase
         .from('saved_locations')
@@ -58,7 +44,6 @@ export const NavigationActions = () => {
         .maybeSingle();
       
       if (defaultError) {
-        console.error('Error fetching default location:', defaultError);
         throw defaultError;
       }
       
@@ -72,35 +57,23 @@ export const NavigationActions = () => {
           .maybeSingle();
         
         if (anyError) {
-          console.error('Error fetching any location:', anyError);
           throw anyError;
         }
         
         if (anyLocation) {
-          console.log('Found non-default location:', anyLocation);
           setCurrentLocation(anyLocation.address);
-        } else {
-          // No locations found, keep default text
-          console.log('No locations found');
-          setCurrentLocation('Set Location');
         }
       } else {
-        console.log('Found default location:', defaultLocation);
         setCurrentLocation(defaultLocation.address);
       }
     } catch (error) {
-      console.error('Error in location fetch process:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to fetch your saved locations',
-        variant: 'destructive',
-      });
-      setCurrentLocation('Set Location');
+      console.error('Error fetching location:', error);
+    } finally {
+      setIsLoadingLocation(false);
     }
   };
 
   const handleLocationSelect = (location: string) => {
-    console.log('Location selected:', location);
     setCurrentLocation(location);
     setShowLocationModal(false);
   };
@@ -125,7 +98,7 @@ export const NavigationActions = () => {
               <span className="hidden lg:inline">Account</span>
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
+          <DropdownMenuContent align="end" className="w-56 bg-white">
             <DropdownMenuItem onClick={() => navigate('/orders')}>
               My Orders
             </DropdownMenuItem>
