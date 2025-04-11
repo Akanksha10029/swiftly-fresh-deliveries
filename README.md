@@ -2,7 +2,7 @@
 
 ## Project info
 
-**URL**: https://lovable.dev/projects/1123c74b-b865-4ea2-bc39-3c2d1e786511
+**URL**: https://preview--swiftly-fresh-deliveries.lovable.app/
 
 ## What technologies are used for this project?
 
