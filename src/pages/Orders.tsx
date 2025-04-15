@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import Navigation from '@/components/Navigation';
@@ -7,11 +6,22 @@ import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Package, Clock, AlertCircle, CheckCircle, RefreshCcw } from 'lucide-react';
-import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Package } from 'lucide-react';
+import {
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useCart, CartItem } from '@/context/CartContext';
 
 type OrderWithItems = {
@@ -34,7 +44,7 @@ const Orders = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { clearCart, setCartItems } = useCart();
+  const { setCartItems } = useCart();
   const [orders, setOrders] = useState<OrderWithItems[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -46,8 +56,7 @@ const Orders = () => {
 
     const fetchOrders = async () => {
       setLoading(true);
-      
-      // Fetch orders
+
       const { data: ordersData, error: ordersError } = await supabase
         .from('orders')
         .select('*')
@@ -55,10 +64,10 @@ const Orders = () => {
         .order('created_at', { ascending: false });
 
       if (ordersError) {
-        toast({ 
-          title: "Error fetching orders", 
+        toast({
+          title: 'Error fetching orders',
           description: ordersError.message,
-          variant: "destructive"
+          variant: 'destructive',
         });
         setLoading(false);
         return;
@@ -66,18 +75,14 @@ const Orders = () => {
 
       const ordersWithItems: OrderWithItems[] = [];
 
-      // For each order, fetch its items
-      for (const order of ordersData) {
+      for (const order of ordersData || []) {
         const { data: itemsData, error: itemsError } = await supabase
           .from('order_items')
           .select('*')
           .eq('order_id', order.id);
 
         if (!itemsError && itemsData) {
-          ordersWithItems.push({
-            ...order,
-            items: itemsData
-          });
+          ordersWithItems.push({ ...order, items: itemsData });
         }
       }
 
@@ -89,49 +94,45 @@ const Orders = () => {
   }, [user, navigate, toast]);
 
   const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">Pending</Badge>;
-      case 'processing':
-        return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">Processing</Badge>;
-      case 'shipped':
-        return <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">Shipped</Badge>;
-      case 'delivered':
-        return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Delivered</Badge>;
-      case 'cancelled':
-        return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">Cancelled</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
-    }
+    const badgeMap: Record<string, string> = {
+      pending: 'bg-yellow-50 text-yellow-700 border-yellow-200',
+      processing: 'bg-blue-50 text-blue-700 border-blue-200',
+      shipped: 'bg-purple-50 text-purple-700 border-purple-200',
+      delivered: 'bg-green-50 text-green-700 border-green-200',
+      cancelled: 'bg-red-50 text-red-700 border-red-200',
+    };
+    return (
+      <Badge
+        variant="outline"
+        className={badgeMap[status] ?? ''}
+      >
+        {status.charAt(0).toUpperCase() + status.slice(1)}
+      </Badge>
+    );
   };
 
   const handleReorder = async (orderItems: any[]) => {
     try {
-      // Add all items to cart with the required productQuantity property
       const cartItems: CartItem[] = orderItems.map(item => ({
         id: item.product_id,
         name: item.product_name,
         price: item.price,
         quantity: item.quantity,
-        image: '/placeholder.svg', // Using placeholder as we don't store image in order_items
-        productQuantity: "1 unit", // Adding default productQuantity as it's required by CartItem type
-        deliveryTime: "9 minutes" // Adding a default deliveryTime
+        image: '/placeholder.svg',
+        productQuantity: '1 unit',
+        deliveryTime: '9 minutes',
       }));
-      
+
       setCartItems(cartItems);
-      
       toast({
-        title: "Items added to cart",
-        description: "All items have been added to your cart",
+        title: 'Items added to cart',
+        description: 'All items have been added to your cart',
       });
-      
-      // Navigate to cart or keep on same page
-      // navigate('/cart');
     } catch (error) {
       toast({
-        title: "Error reordering",
-        description: "There was an error adding items to cart",
-        variant: "destructive"
+        title: 'Error reordering',
+        description: 'There was an error adding items to cart',
+        variant: 'destructive',
       });
     }
   };
@@ -143,15 +144,19 @@ const Orders = () => {
         <Breadcrumb className="mb-6">
           <BreadcrumbList>
             <BreadcrumbItem>
-              <BreadcrumbLink asChild><Link to="/">Home</Link></BreadcrumbLink>
+              <BreadcrumbLink asChild>
+                <Link to="/">Home</Link>
+              </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
-              <BreadcrumbLink asChild><Link to="/orders">My Orders</Link></BreadcrumbLink>
+              <BreadcrumbLink asChild>
+                <Link to="/orders">My Orders</Link>
+              </BreadcrumbLink>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
-        
+
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold">My Orders</h1>
           <Button asChild variant="outline">
@@ -165,21 +170,27 @@ const Orders = () => {
             <TabsTrigger value="pending">Pending</TabsTrigger>
             <TabsTrigger value="delivered">Delivered</TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="all">
             {renderOrderList(orders, loading, getStatusBadge, handleReorder)}
           </TabsContent>
-          
           <TabsContent value="pending">
-            {renderOrderList(orders.filter(order => 
-              ['pending', 'processing', 'shipped'].includes(order.status)
-            ), loading, getStatusBadge, handleReorder)}
+            {renderOrderList(
+              orders.filter(order =>
+                ['pending', 'processing', 'shipped'].includes(order.status)
+              ),
+              loading,
+              getStatusBadge,
+              handleReorder
+            )}
           </TabsContent>
-          
           <TabsContent value="delivered">
-            {renderOrderList(orders.filter(order => 
-              order.status === 'delivered'
-            ), loading, getStatusBadge, handleReorder)}
+            {renderOrderList(
+              orders.filter(order => order.status === 'delivered'),
+              loading,
+              getStatusBadge,
+              handleReorder
+            )}
           </TabsContent>
         </Tabs>
       </div>
@@ -189,8 +200,8 @@ const Orders = () => {
 };
 
 const renderOrderList = (
-  orders: OrderWithItems[], 
-  loading: boolean, 
+  orders: OrderWithItems[],
+  loading: boolean,
   getStatusBadge: (status: string) => React.ReactNode,
   handleReorder: (items: any[]) => void
 ) => {
@@ -234,21 +245,26 @@ const renderOrderList = (
               {new Date(order.created_at).toLocaleDateString('en-US', {
                 year: 'numeric',
                 month: 'long',
-                day: 'numeric'
+                day: 'numeric',
               })}
             </div>
           </div>
           {getStatusBadge(order.status)}
         </div>
       </div>
-      
+
       <div className="p-4">
         <div className="space-y-3">
-          {order.items.map((item) => (
-            <div key={item.id} className="flex justify-between items-center py-2 border-b last:border-0">
+          {order.items.map(item => (
+            <div
+              key={item.id}
+              className="flex justify-between items-center py-2 border-b last:border-0"
+            >
               <div>
                 <div className="font-medium">{item.product_name}</div>
-                <div className="text-sm text-gray-500">Qty: {item.quantity} × ${item.price.toFixed(2)}</div>
+                <div className="text-sm text-gray-500">
+                  Qty: {item.quantity} × ${item.price.toFixed(2)}
+                </div>
               </div>
               <div className="font-medium">
                 ${(item.quantity * item.price).toFixed(2)}
@@ -256,19 +272,13 @@ const renderOrderList = (
             </div>
           ))}
         </div>
-        
+
         <div className="mt-4 flex justify-between items-center pt-3 border-t">
           <div>
             <div className="text-sm text-gray-500">Total</div>
             <div className="font-bold text-lg">${order.total.toFixed(2)}</div>
           </div>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="flex items-center gap-1"
-            onClick={() => handleReorder(order.items)}
-          >
-            <RefreshCcw className="h-4 w-4" />
+          <Button variant="outline" size="sm" onClick={() => handleReorder(order.items)}>
             Reorder
           </Button>
         </div>
