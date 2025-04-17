@@ -1,14 +1,11 @@
-import React, { useState } from 'react';
-import { MessageCircle, Phone, Video, Clock, FileCheck, ShoppingCart, X } from 'lucide-react';
+
+import React from 'react';
+import { MessageCircle, Phone, Video, Clock, FileCheck, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const DoctorConsultation = () => {
-  const [modal, setModal] = useState(null); // null, 'chat', 'voice', 'video'
-
-  const closeModal = () => setModal(null);
-
   return (
-    <div className="py-10 sm:py-16 bg-white relative">
+    <div className="py-10 sm:py-16 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 md:px-10">
         <h2 className="text-2xl sm:text-3xl font-bold mb-8 sm:mb-12 text-center">Online Doctor Consultation</h2>
         
@@ -24,7 +21,6 @@ const DoctorConsultation = () => {
             <div className="space-y-3">
               <Button 
                 variant="outline" 
-                onClick={() => setModal('chat')}
                 className="w-full justify-start gap-2 text-xs sm:text-sm py-2 h-auto flex-wrap" 
                 size="sm"
               >
@@ -33,7 +29,6 @@ const DoctorConsultation = () => {
               </Button>
               <Button 
                 variant="outline" 
-                onClick={() => setModal('voice')}
                 className="w-full justify-start gap-2 text-xs sm:text-sm py-2 h-auto" 
                 size="sm"
               >
@@ -42,7 +37,6 @@ const DoctorConsultation = () => {
               </Button>
               <Button 
                 variant="outline" 
-                onClick={() => setModal('video')}
                 className="w-full justify-start gap-2 text-xs sm:text-sm py-2 h-auto" 
                 size="sm"
               >
@@ -68,7 +62,9 @@ const DoctorConsultation = () => {
               <div className="bg-white p-3 rounded-xl">
                 <FileCheck className="h-5 w-5 text-green-500 mb-1" />
                 <h4 className="font-medium mb-1 text-xs sm:text-sm">Receive Digital Prescription</h4>
-                <p className="text-xs text-gray-600">Get your prescription instantly</p>
+                <p className="text-xs text-gray-600">
+                  Get your prescription instantly
+                </p>
               </div>
               <Button 
                 className="w-full bg-green-500 hover:bg-green-600 text-xs sm:text-sm py-2 h-auto flex items-center justify-center"
@@ -91,33 +87,20 @@ const DoctorConsultation = () => {
             <div className="space-y-3">
               <div className="bg-white p-3 rounded-xl">
                 <h4 className="font-medium text-purple-600 mb-1 text-xs sm:text-sm">Express Delivery</h4>
-                <p className="text-xs text-gray-600">Get medicines delivered within 30 minutes</p>
+                <p className="text-xs text-gray-600">
+                  Get medicines delivered within 30 minutes
+                </p>
               </div>
               <div className="bg-white p-3 rounded-xl">
                 <h4 className="font-medium text-purple-600 mb-1 text-xs sm:text-sm">Regular Delivery</h4>
-                <p className="text-xs text-gray-600">Standard delivery within 2-3 hours</p>
+                <p className="text-xs text-gray-600">
+                  Standard delivery within 2-3 hours
+                </p>
               </div>
             </div>
           </div>
         </div>
       </div>
-
-      {/* Modal UI */}
-      {modal && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-          <div className="bg-white w-11/12 max-w-md rounded-2xl p-6 relative shadow-xl">
-            <button className="absolute top-3 right-3 text-gray-400 hover:text-gray-600" onClick={closeModal}>
-              <X className="w-5 h-5" />
-            </button>
-            <h2 className="text-lg font-semibold mb-4 capitalize">{modal} Consultation</h2>
-            <div className="text-sm text-gray-600">
-              {modal === 'chat' && "You're now connected to a doctor via chat. Ask your questions!"}
-              {modal === 'voice' && "Voice call started. Please speak clearly and ensure good network."}
-              {modal === 'video' && "Video call initiated. Please allow camera access to proceed."}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
