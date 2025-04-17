@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { MessageCircle, Phone, Video, Clock, FileCheck, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useHistory } from 'react-router-dom';
+import { useNavigate  } from 'react-router-dom';
 
 const DoctorConsultation = () => {
-  const history = useHistory(); // React Router hook to navigate programmatically
+  const navigate = useNavigate (); // React Router hook to navigate programmatically
   const [chatStatus, setChatStatus] = useState(false); // Track chat status
   const [voiceStatus, setVoiceStatus] = useState(false); // Track voice call status
   const [videoStatus, setVideoStatus] = useState(false); // Track video call status
@@ -25,7 +25,7 @@ const DoctorConsultation = () => {
   };
 
   const handleAddMedicinesToCart = () => {
-    history.push('/doctor-consultation'); // Redirect to consultation page
+    navigate.push('/doctor-consultation'); // Redirect to consultation page
   };
 
   return (
