@@ -90,6 +90,8 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
     setIsAdding(true);
     
     try {
+      const fullAddress = addressData.address + (addressData.additionalDetails ? ` (${addressData.additionalDetails})` : '');
+      
       if (isAuthenticated && user?.id) {
         const isFirstLocation = locations.length === 0;
         
@@ -99,7 +101,7 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
             {
               user_id: user.id,
               name: 'Home',
-              address: addressData.address + (addressData.additionalDetails ? ` (${addressData.additionalDetails})` : ''),
+              address: fullAddress,
               is_default: isFirstLocation,
             },
           ]);
@@ -115,11 +117,7 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
       }
       
       // Always handle the location selection, whether user is authenticated or not
-      handleSelectLocation(addressData.address + (addressData.additionalDetails ? ` (${addressData.additionalDetails})` : ''));
-      
-      setSearchQuery('');
-      setShowAddressForm(false);
-      setDetectedCoordinates(null);
+      handleSelectLocation(fullAddress);
       
     } catch (error: any) {
       console.error('Error adding location:', error);
@@ -130,6 +128,9 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
       });
     } finally {
       setIsAdding(false);
+      setShowAddressForm(false);
+      setDetectedCoordinates(null);
+      setSearchQuery('');
     }
   };
 
@@ -182,7 +183,6 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
           const { latitude, longitude } = position.coords;
           console.log("Location detected:", latitude, longitude);
           setDetectedCoordinates({ lat: latitude, lng: longitude });
-          setShowAddressForm(true);
           setDetectingLocation(false);
         },
         (error) => {
@@ -207,11 +207,7 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
   };
 
   const onSubmitLocationForm = (data: LocationFormValues) => {
-    if (isAuthenticated && user?.id) {
-      addLocation(data);
-    } else {
-      handleSelectLocation(data.address + (data.additionalDetails ? ` (${data.additionalDetails})` : ''));
-    }
+    addLocation(data);
   };
 
   const handleAddNewLocation = (query: string) => {

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { MapPin, User, ShoppingCart, LogOut, Heart } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
@@ -14,7 +15,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
 export const NavigationActions = () => {
-  const { setIsCartOpen, totalItems, subtotal } = useCart();
+  const { setIsCartOpen, totalItems } = useCart();
   const { isAuthenticated, signOut, user } = useAuth();
   const navigate = useNavigate();
   const [showLocationModal, setShowLocationModal] = useState(false);
@@ -84,12 +85,20 @@ export const NavigationActions = () => {
   const handleLocationSelect = (location: string) => {
     setCurrentLocation(location);
     localStorage.setItem('userLocation', location);
-    setShowLocationModal(false);
     
     toast({
       title: 'Location updated',
       description: 'Your delivery location has been updated.',
     });
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      navigate('/');
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
   };
 
   return (
@@ -123,7 +132,7 @@ export const NavigationActions = () => {
             <DropdownMenuItem onClick={() => navigate('/profile')}>
               Profile Settings
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => signOut()}>
+            <DropdownMenuItem onClick={handleSignOut}>
               <LogOut className="h-4 w-4 mr-2" />
               Sign Out
             </DropdownMenuItem>

@@ -7,7 +7,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Package, Clock, AlertCircle, CheckCircle, RefreshCcw } from 'lucide-react';
+import { Package, RefreshCcw } from 'lucide-react';
 import { Breadcrumb, BreadcrumbList, BreadcrumbItem, BreadcrumbLink, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -31,22 +31,31 @@ type OrderWithItems = {
 };
 
 const Orders = () => {
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { clearCart, setCartItems } = useCart();
+  const { setCartItems } = useCart();
   const [orders, setOrders] = useState<OrderWithItems[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) {
-      navigate('/auth/signin');
+    // Check if user is authenticated
+    if (!isAuthenticated) {
+      navigate('/auth/signin', { replace: true });
       return;
     }
 
-    const fetchOrders = async () => {
-      setLoading(true);
-      
+    if (user) {
+      fetchOrders();
+    }
+  }, [user, isAuthenticated, navigate]);
+
+  const fetchOrders = async () => {
+    if (!user?.id) return;
+    
+    setLoading(true);
+    
+    try {
       // Fetch orders
       const { data: ordersData, error: ordersError } = await supabase
         .from('orders')
@@ -55,38 +64,41 @@ const Orders = () => {
         .order('created_at', { ascending: false });
 
       if (ordersError) {
-        toast({ 
-          title: "Error fetching orders", 
-          description: ordersError.message,
-          variant: "destructive"
-        });
-        setLoading(false);
-        return;
+        throw ordersError;
       }
 
       const ordersWithItems: OrderWithItems[] = [];
 
       // For each order, fetch its items
-      for (const order of ordersData) {
+      for (const order of ordersData || []) {
         const { data: itemsData, error: itemsError } = await supabase
           .from('order_items')
           .select('*')
           .eq('order_id', order.id);
 
-        if (!itemsError && itemsData) {
-          ordersWithItems.push({
-            ...order,
-            items: itemsData
-          });
+        if (itemsError) {
+          console.error('Error fetching order items:', itemsError);
+          continue;
         }
+
+        ordersWithItems.push({
+          ...order,
+          items: itemsData || []
+        });
       }
 
       setOrders(ordersWithItems);
+    } catch (error: any) {
+      console.error('Error fetching orders:', error);
+      toast({ 
+        title: "Error fetching orders", 
+        description: error.message || "Failed to load your orders",
+        variant: "destructive"
+      });
+    } finally {
       setLoading(false);
-    };
-
-    fetchOrders();
-  }, [user, navigate, toast]);
+    }
+  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -105,7 +117,7 @@ const Orders = () => {
     }
   };
 
-  const handleReorder = async (orderItems: any[]) => {
+  const handleReorder = (orderItems: any[]) => {
     try {
       // Add all items to cart with the required productQuantity property
       const cartItems: CartItem[] = orderItems.map(item => ({
@@ -124,9 +136,6 @@ const Orders = () => {
         title: "Items added to cart",
         description: "All items have been added to your cart",
       });
-      
-      // Navigate to cart or keep on same page
-      // navigate('/cart');
     } catch (error) {
       toast({
         title: "Error reordering",
