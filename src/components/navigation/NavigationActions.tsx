@@ -20,21 +20,32 @@ export const NavigationActions = () => {
   const navigate = useNavigate();
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [currentLocation, setCurrentLocation] = useState<string>('Select Location');
-  const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+  const [isLoadingLocation, setIsLoadingLocation] = useState(true);
 
-  // Fetch location on component mount
+  // Check for location on component mount
   useEffect(() => {
-    // First check localStorage for a cached location
-    const savedLocation = localStorage.getItem('userLocation');
-    if (savedLocation) {
-      setCurrentLocation(savedLocation);
-    }
-    
-    // Then, if authenticated, fetch from Supabase
+    checkAndSetLocation();
+  }, []);
+
+  // Fetch location when auth state changes
+  useEffect(() => {
     if (isAuthenticated && user?.id) {
       fetchDefaultLocation();
     }
   }, [isAuthenticated, user?.id]);
+
+  const checkAndSetLocation = () => {
+    // First check localStorage for a cached location
+    const savedLocation = localStorage.getItem('userLocation');
+    if (savedLocation) {
+      setCurrentLocation(savedLocation);
+      setIsLoadingLocation(false);
+    } else {
+      // Show location modal if no location is set
+      setShowLocationModal(true);
+      setIsLoadingLocation(false);
+    }
+  };
 
   const fetchDefaultLocation = async () => {
     if (!user?.id) return;
@@ -115,6 +126,7 @@ export const NavigationActions = () => {
       <button 
         className="flex items-center text-sm font-medium hover:text-primary transition-colors"
         onClick={() => setShowLocationModal(true)}
+        aria-label="Select delivery location"
       >
         <MapPin className="h-4 w-4 mr-2" />
         <span className="hidden lg:inline truncate max-w-[150px]">
@@ -130,18 +142,18 @@ export const NavigationActions = () => {
               <span className="hidden lg:inline">Account</span>
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56 bg-white">
-            <DropdownMenuItem onClick={() => navigate('/orders')}>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuItem onClick={() => navigate('/orders')} className="cursor-pointer">
               My Orders
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => navigate('/wishlist')}>
+            <DropdownMenuItem onClick={() => navigate('/wishlist')} className="cursor-pointer">
               <Heart className="h-4 w-4 mr-2" />
               My Wishlist
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => navigate('/profile')}>
+            <DropdownMenuItem onClick={() => navigate('/profile')} className="cursor-pointer">
               Profile Settings
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleSignOut}>
+            <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
               <LogOut className="h-4 w-4 mr-2" />
               Sign Out
             </DropdownMenuItem>
