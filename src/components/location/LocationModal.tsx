@@ -7,7 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { useForm } from 'react-hook-form';
 
-// Import our new component modules
+// Import our component modules
 import LocationForm, { LocationFormValues } from './modals/LocationForm';
 import LocationList from './modals/LocationList';
 import LocationDetection from './modals/LocationDetection';
@@ -78,37 +78,48 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
   };
 
   const addLocation = async (addressData: LocationFormValues) => {
-    if (!addressData.address.trim() || !user?.id) return;
+    if (!addressData.address.trim()) {
+      toast({
+        title: 'Error',
+        description: 'Address cannot be empty.',
+        variant: 'destructive',
+      });
+      return;
+    }
     
     setIsAdding(true);
     
     try {
-      const isFirstLocation = locations.length === 0;
-      
-      const { error } = await supabase
-        .from('saved_locations')
-        .insert([
-          {
-            user_id: user.id,
-            name: 'Home',
-            address: addressData.address + (addressData.additionalDetails ? ` (${addressData.additionalDetails})` : ''),
-            is_default: isFirstLocation,
-          },
-        ]);
+      if (isAuthenticated && user?.id) {
+        const isFirstLocation = locations.length === 0;
         
-      if (error) throw error;
+        const { error } = await supabase
+          .from('saved_locations')
+          .insert([
+            {
+              user_id: user.id,
+              name: 'Home',
+              address: addressData.address + (addressData.additionalDetails ? ` (${addressData.additionalDetails})` : ''),
+              is_default: isFirstLocation,
+            },
+          ]);
+          
+        if (error) throw error;
+        
+        toast({
+          title: 'Location added',
+          description: 'Your location has been saved.',
+        });
+        
+        fetchLocations();
+      }
       
-      toast({
-        title: 'Location added',
-        description: 'Your location has been saved.',
-      });
-      
-      // If this is the first location, select it automatically
+      // Always handle the location selection, whether user is authenticated or not
       handleSelectLocation(addressData.address + (addressData.additionalDetails ? ` (${addressData.additionalDetails})` : ''));
       
       setSearchQuery('');
       setShowAddressForm(false);
-      fetchLocations();
+      setDetectedCoordinates(null);
       
     } catch (error: any) {
       console.error('Error adding location:', error);
@@ -169,7 +180,9 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
+          console.log("Location detected:", latitude, longitude);
           setDetectedCoordinates({ lat: latitude, lng: longitude });
+          setShowAddressForm(true);
           setDetectingLocation(false);
         },
         (error) => {
@@ -180,7 +193,8 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
             variant: 'destructive',
           });
           setDetectingLocation(false);
-        }
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
       );
     } else {
       toast({

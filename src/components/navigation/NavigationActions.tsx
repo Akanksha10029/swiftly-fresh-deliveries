@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { MapPin, User, ShoppingCart, LogOut, Heart } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
@@ -22,20 +21,19 @@ export const NavigationActions = () => {
   const [currentLocation, setCurrentLocation] = useState<string>('Select Location');
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
 
-  // Fetch default location when authenticated
+  // Fetch location on component mount
   useEffect(() => {
-    if (isAuthenticated && user?.id) {
-      fetchDefaultLocation();
-    }
-  }, [isAuthenticated, user?.id]);
-
-  // Also fetch location from localStorage when component mounts
-  useEffect(() => {
+    // First check localStorage for a cached location
     const savedLocation = localStorage.getItem('userLocation');
     if (savedLocation) {
       setCurrentLocation(savedLocation);
     }
-  }, []);
+    
+    // Then, if authenticated, fetch from Supabase
+    if (isAuthenticated && user?.id) {
+      fetchDefaultLocation();
+    }
+  }, [isAuthenticated, user?.id]);
 
   const fetchDefaultLocation = async () => {
     if (!user?.id) return;

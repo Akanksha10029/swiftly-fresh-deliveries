@@ -36,7 +36,7 @@ const LocationDetection: React.FC<LocationDetectionProps> = ({
         ) : (
           <MapPin className="h-4 w-4" />
         )}
-        Detect my location
+        {detectingLocation ? "Detecting location..." : "Detect my location"}
       </Button>
       
       <div className="flex items-center justify-center gap-4">
