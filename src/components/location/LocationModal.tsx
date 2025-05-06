@@ -1,17 +1,13 @@
 
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { X } from 'lucide-react';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { X, MapPin, Loader2 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { useForm } from 'react-hook-form';
-
-// Import our component modules
-import LocationForm, { LocationFormValues } from './modals/LocationForm';
-import LocationList from './modals/LocationList';
-import LocationDetection from './modals/LocationDetection';
-import AuthenticatedLocationSearch from './modals/AuthenticatedLocationSearch';
 
 interface LocationModalProps {
   isOpen: boolean;
@@ -19,15 +15,17 @@ interface LocationModalProps {
   onSelectLocation: (location: string) => void;
 }
 
+interface LocationFormValues {
+  address: string;
+  additionalDetails: string;
+}
+
 const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelectLocation }) => {
   const { user, isAuthenticated } = useAuth();
   const [locations, setLocations] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [isAdding, setIsAdding] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [detectingLocation, setDetectingLocation] = useState(false);
-  const [detectedCoordinates, setDetectedCoordinates] = useState<{lat: number; lng: number} | null>(null);
   const [showAddressForm, setShowAddressForm] = useState(false);
   
   const form = useForm<LocationFormValues>({
@@ -37,26 +35,17 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
     }
   });
 
-  // Fetch locations when modal opens
+  // Fetch locations when modal opens for authenticated users
   useEffect(() => {
     if (isAuthenticated && isOpen && user?.id) {
       fetchLocations();
     }
   }, [isAuthenticated, isOpen, user?.id]);
 
-  // Update form values when detected coordinates change
-  useEffect(() => {
-    if (detectedCoordinates) {
-      form.setValue('address', `Detected Location (${detectedCoordinates.lat.toFixed(4)}, ${detectedCoordinates.lng.toFixed(4)})`);
-      setShowAddressForm(true);
-    }
-  }, [detectedCoordinates, form]);
-
   const fetchLocations = async () => {
     if (!user?.id) return;
     
     setIsLoading(true);
-    setError(null);
     
     try {
       const { data, error } = await supabase
@@ -71,106 +60,13 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
       
     } catch (error: any) {
       console.error('Error fetching locations:', error);
-      setError('Failed to fetch locations. Please try again.');
+      toast({
+        title: 'Error',
+        description: 'Failed to fetch locations',
+        variant: 'destructive',
+      });
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const addLocation = async (addressData: LocationFormValues) => {
-    if (!addressData.address.trim()) {
-      toast({
-        title: 'Error',
-        description: 'Address cannot be empty.',
-        variant: 'destructive',
-      });
-      return;
-    }
-    
-    setIsAdding(true);
-    
-    try {
-      const fullAddress = addressData.address + (addressData.additionalDetails ? ` (${addressData.additionalDetails})` : '');
-      
-      if (isAuthenticated && user?.id) {
-        const isFirstLocation = locations.length === 0;
-        
-        const { error } = await supabase
-          .from('saved_locations')
-          .insert([
-            {
-              user_id: user.id,
-              name: 'Home',
-              address: fullAddress,
-              is_default: isFirstLocation,
-            },
-          ]);
-          
-        if (error) throw error;
-        
-        toast({
-          title: 'Location added',
-          description: 'Your location has been saved.',
-        });
-        
-        fetchLocations();
-      }
-      
-      // Always handle the location selection, whether user is authenticated or not
-      handleSelectLocation(fullAddress);
-      
-    } catch (error: any) {
-      console.error('Error adding location:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to add location.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsAdding(false);
-      setShowAddressForm(false);
-      setDetectedCoordinates(null);
-      setSearchQuery('');
-    }
-  };
-
-  const handleSelectLocation = (address: string) => {
-    onSelectLocation(address);
-    onClose();
-  };
-
-  const makeDefault = async (locationId: string) => {
-    if (!user?.id) return;
-    
-    try {
-      // First, remove default status from all locations
-      await supabase
-        .from('saved_locations')
-        .update({ is_default: false })
-        .eq('user_id', user.id);
-      
-      // Then set the selected location as default
-      const { error } = await supabase
-        .from('saved_locations')
-        .update({ is_default: true })
-        .eq('id', locationId);
-        
-      if (error) throw error;
-      
-      toast({
-        title: 'Default updated',
-        description: 'Your default location has been updated.',
-      });
-      
-      fetchLocations();
-      
-    } catch (error: any) {
-      console.error('Error updating default location:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to update default location.',
-        variant: 'destructive',
-      });
     }
   };
 
@@ -182,57 +78,147 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
         (position) => {
           const { latitude, longitude } = position.coords;
           console.log("Location detected:", latitude, longitude);
-          setDetectedCoordinates({ lat: latitude, lng: longitude });
+          
+          // For simplicity, just use the coordinates as the address
+          const detectedLocation = `Detected Location (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`;
+          
+          if (isAuthenticated && user?.id) {
+            saveLocation(detectedLocation);
+          } else {
+            // For non-authenticated users, just set the location
+            handleSelectLocation(detectedLocation);
+          }
+          
           setDetectingLocation(false);
         },
         (error) => {
           console.error('Geolocation error:', error);
           toast({
             title: 'Location detection failed',
-            description: 'Please grant location access or enter your address manually.',
+            description: 'Please enter your address manually',
             variant: 'destructive',
           });
           setDetectingLocation(false);
-        },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        }
       );
     } else {
       toast({
         title: 'Geolocation not supported',
-        description: 'Your browser does not support location detection.',
+        description: 'Your browser does not support location detection',
         variant: 'destructive',
       });
       setDetectingLocation(false);
     }
   };
 
-  const onSubmitLocationForm = (data: LocationFormValues) => {
-    addLocation(data);
+  const saveLocation = async (address: string) => {
+    if (!user?.id) return;
+    
+    setIsLoading(true);
+    
+    try {
+      const isFirstLocation = locations.length === 0;
+      
+      const { error } = await supabase
+        .from('saved_locations')
+        .insert([
+          {
+            user_id: user.id,
+            name: 'Home',
+            address,
+            is_default: isFirstLocation,
+          },
+        ]);
+        
+      if (error) throw error;
+      
+      toast({
+        title: 'Location saved',
+        description: 'Your location has been saved',
+      });
+      
+      handleSelectLocation(address);
+      
+    } catch (error: any) {
+      console.error('Error saving location:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to save location',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleAddNewLocation = (query: string) => {
-    form.setValue('address', query);
-    setShowAddressForm(true);
+  const handleLocationInput = () => {
+    if (!searchQuery.trim()) {
+      toast({
+        title: 'Empty location',
+        description: 'Please enter your location',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    if (isAuthenticated && user?.id) {
+      saveLocation(searchQuery);
+    } else {
+      handleSelectLocation(searchQuery);
+    }
   };
 
-  const handleSignIn = () => {
+  const handleSelectLocation = (address: string) => {
+    onSelectLocation(address);
     onClose();
-    window.location.href = '/auth/signin';
+  };
+
+  const renderSavedLocations = () => {
+    if (isLoading) {
+      return (
+        <div className="flex justify-center py-4">
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        </div>
+      );
+    }
+    
+    if (locations.length === 0) {
+      return (
+        <div className="text-center py-4 text-gray-500">
+          No saved locations
+        </div>
+      );
+    }
+    
+    return (
+      <div className="mt-4 space-y-2 max-h-48 overflow-y-auto">
+        {locations.map((location) => (
+          <div
+            key={location.id}
+            className="p-3 border rounded-md hover:bg-gray-50 cursor-pointer flex items-center"
+            onClick={() => handleSelectLocation(location.address)}
+          >
+            <MapPin className="h-5 w-5 text-primary mr-2" />
+            <div className="flex-1">
+              <p className="font-medium">{location.name || 'Location'}</p>
+              <p className="text-sm text-gray-500 truncate">{location.address}</p>
+            </div>
+            {location.is_default && (
+              <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                Default
+              </span>
+            )}
+          </div>
+        ))}
+      </div>
+    );
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => {
-      if (!open) {
-        onClose();
-        setSearchQuery('');
-        setIsAdding(false);
-        setShowAddressForm(false);
-        setDetectedCoordinates(null);
-      }
-    }}>
-      <DialogContent className="sm:max-w-md bg-white p-0 overflow-hidden">
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-md p-0">
         <div className="flex items-center justify-between p-4 border-b">
-          <DialogTitle className="text-lg">Change Location</DialogTitle>
+          <h2 className="font-medium text-lg">Change Location</h2>
           <button 
             onClick={onClose}
             className="rounded-full hover:bg-gray-100 p-1"
@@ -241,47 +227,60 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
           </button>
         </div>
         
-        <div className="p-4 flex flex-col gap-4">
-          {showAddressForm ? (
-            <LocationForm 
-              form={form}
-              onSubmit={onSubmitLocationForm}
-              onCancel={() => {
-                setShowAddressForm(false);
-                setDetectedCoordinates(null);
-              }}
-              isAdding={isAdding}
+        <div className="p-4 space-y-4">
+          <Button 
+            variant="default" 
+            className="w-full gap-2 bg-green-600 hover:bg-green-700"
+            onClick={detectLocation}
+            disabled={detectingLocation}
+          >
+            {detectingLocation ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <MapPin className="h-4 w-4" />
+            )}
+            {detectingLocation ? "Detecting..." : "Detect my location"}
+          </Button>
+          
+          <div className="flex items-center gap-2">
+            <div className="border-t flex-1"></div>
+            <span className="text-gray-400 text-sm">OR</span>
+            <div className="border-t flex-1"></div>
+          </div>
+          
+          <div className="flex gap-2">
+            <Input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="search delivery location"
+              className="flex-1"
             />
-          ) : isAuthenticated ? (
-            <>
-              <AuthenticatedLocationSearch
-                searchQuery={searchQuery}
-                onSearchChange={setSearchQuery}
-                onDetectLocation={detectLocation}
-                detectingLocation={detectingLocation}
-              />
-              
-              <LocationList
-                locations={locations}
-                isLoading={isLoading}
-                error={error}
-                searchQuery={searchQuery}
-                onSelectLocation={handleSelectLocation}
-                onMakeDefault={makeDefault}
-                onRetry={fetchLocations}
-                onAddNewLocation={handleAddNewLocation}
-              />
-            </>
-          ) : (
-            <LocationDetection
-              searchQuery={searchQuery}
-              onSearchChange={setSearchQuery}
-              onDetectLocation={detectLocation}
-              onAddDetails={() => handleAddNewLocation(searchQuery)}
-              detectingLocation={detectingLocation}
-              isAuthenticated={isAuthenticated}
-              onSignIn={handleSignIn}
-            />
+            <Button 
+              onClick={handleLocationInput}
+              disabled={isLoading}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Set"}
+            </Button>
+          </div>
+          
+          {isAuthenticated && renderSavedLocations()}
+          
+          {!isAuthenticated && (
+            <div className="text-center mt-4">
+              <p className="text-sm text-gray-500 mb-2">
+                Sign in to save locations for faster checkout
+              </p>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  onClose();
+                  window.location.href = '/auth/signin';
+                }}
+              >
+                Sign In
+              </Button>
+            </div>
           )}
         </div>
       </DialogContent>

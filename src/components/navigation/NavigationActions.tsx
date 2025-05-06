@@ -88,7 +88,7 @@ export const NavigationActions = () => {
     
     toast({
       title: 'Location updated',
-      description: 'Your delivery location has been updated.',
+      description: 'Your delivery location has been updated',
     });
   };
 
@@ -96,8 +96,17 @@ export const NavigationActions = () => {
     try {
       await signOut();
       navigate('/');
+      toast({
+        title: 'Signed out',
+        description: 'You have been signed out successfully',
+      });
     } catch (error) {
       console.error('Error signing out:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to sign out. Please try again.',
+        variant: 'destructive',
+      });
     }
   };
 
