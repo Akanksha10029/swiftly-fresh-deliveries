@@ -1,12 +1,14 @@
 
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { X, MapPin, Loader2, Search } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription } from '@/components/ui/dialog';
+import { X, MapPin, Loader2, Check } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Form, FormField, FormItem, FormLabel, FormControl } from '@/components/ui/form';
 import { useForm } from 'react-hook-form';
 
 interface LocationModalProps {
@@ -38,6 +40,9 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
   const [detectingLocation, setDetectingLocation] = useState(false);
   const [searchResults, setSearchResults] = useState<string[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [formattedAddress, setFormattedAddress] = useState<string | null>(null);
+  const [isAddingLocation, setIsAddingLocation] = useState(false);
   
   const form = useForm<LocationFormValues>({
     defaultValues: {
@@ -46,14 +51,24 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
     }
   });
 
-  // Fetch locations when modal opens for authenticated users
+  // Fetch saved locations when modal opens for authenticated users
   useEffect(() => {
     if (isAuthenticated && isOpen && user?.id) {
       fetchLocations();
     }
   }, [isAuthenticated, isOpen, user?.id]);
 
-  // Mock function for location search (replace with real API call)
+  // Reset state when modal is closed
+  useEffect(() => {
+    if (!isOpen) {
+      setShowForm(false);
+      setFormattedAddress(null);
+      form.reset();
+      setSearchQuery('');
+    }
+  }, [isOpen, form]);
+
+  // Effect for search functionality
   useEffect(() => {
     const searchLocations = async (query: string) => {
       if (!query || query.length < 3) {
@@ -86,6 +101,8 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
     const debounce = setTimeout(() => {
       if (searchQuery.trim()) {
         searchLocations(searchQuery);
+      } else {
+        setSearchResults([]);
       }
     }, 300);
     
@@ -135,46 +152,24 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
               body: { lat: latitude, lng: longitude }
             });
             
-            if (error) throw error;
+            console.log("Geocoding response:", data);
             
-            if (data && data.success && data.address) {
-              const address = data.address as FormattedAddress;
+            if (error) {
+              console.error("Geocoding function error:", error);
+              throw error;
+            }
+            
+            if (data && data.success) {
+              // Set the form with the detected address
+              form.setValue('address', data.address.fullAddress);
               
-              // Format the address in a user-friendly way
-              let formattedAddress = '';
+              // Store the formatted address for display
+              setFormattedAddress(data.displayAddress || data.address.fullAddress);
               
-              if (address.neighbourhood) {
-                formattedAddress += address.neighbourhood;
-              }
-              
-              if (address.city) {
-                formattedAddress += formattedAddress ? `, ${address.city}` : address.city;
-              }
-              
-              if (address.state) {
-                formattedAddress += formattedAddress ? `, ${address.state}` : address.state;
-              }
-              
-              if (address.postcode) {
-                formattedAddress += ` ${address.postcode}`;
-              }
-              
-              // Use a shorter version if the full address is too long
-              const displayAddress = formattedAddress || address.fullAddress;
-              
-              if (isAuthenticated && user?.id) {
-                saveLocation(displayAddress);
-              } else {
-                // For non-authenticated users, just set the location
-                handleSelectLocation(displayAddress);
-              }
-              
-              toast({
-                title: "Location detected",
-                description: `Delivering to ${displayAddress}`,
-              });
+              // Show the form for additional details
+              setShowForm(true);
             } else {
-              throw new Error('Could not decode location');
+              throw new Error(data?.error || 'Could not decode location');
             }
           } catch (error) {
             console.error('Error reverse geocoding:', error);
@@ -183,6 +178,7 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
               description: 'Failed to get your address. Please enter manually.',
               variant: 'destructive',
             });
+          } finally {
             setDetectingLocation(false);
           }
         },
@@ -211,10 +207,36 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
     }
   };
 
-  const saveLocation = async (address: string) => {
-    if (!user?.id) return;
+  const handleFormSubmit = async (formData: LocationFormValues) => {
+    setIsAddingLocation(true);
     
-    setIsLoading(true);
+    try {
+      const displayAddress = formattedAddress || formData.address;
+      const fullAddress = formattedAddress 
+        ? `${displayAddress}${formData.additionalDetails ? `, ${formData.additionalDetails}` : ''}` 
+        : formData.address;
+      
+      if (isAuthenticated && user?.id) {
+        await saveLocationToDatabase(displayAddress, fullAddress);
+      } else {
+        // For non-authenticated users, just set in local storage
+        localStorage.setItem('userLocation', displayAddress);
+        handleSelectLocation(displayAddress);
+      }
+    } catch (error) {
+      console.error("Error saving location:", error);
+      toast({
+        title: 'Error',
+        description: 'Failed to save location',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsAddingLocation(false);
+    }
+  };
+
+  const saveLocationToDatabase = async (displayAddress: string, fullAddress: string) => {
+    if (!user?.id) return;
     
     try {
       const isFirstLocation = locations.length === 0;
@@ -225,7 +247,7 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
           {
             user_id: user.id,
             name: 'Home',
-            address,
+            address: displayAddress,
             is_default: isFirstLocation,
           },
         ]);
@@ -237,29 +259,26 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
         description: 'Your location has been saved',
       });
       
-      handleSelectLocation(address);
+      handleSelectLocation(displayAddress);
       
     } catch (error: any) {
-      console.error('Error saving location:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to save location',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-      setDetectingLocation(false);
+      throw error;
     }
   };
 
   const handleSearchResultClick = (location: string) => {
     setSearchQuery(location);
     setSearchResults([]);
-    
-    if (isAuthenticated && user?.id) {
-      saveLocation(location);
-    } else {
-      handleSelectLocation(location);
+    form.setValue('address', location);
+    setFormattedAddress(location);
+    setShowForm(true);
+  };
+
+  const handleManualSearch = () => {
+    if (searchQuery.trim()) {
+      form.setValue('address', searchQuery);
+      setFormattedAddress(searchQuery);
+      setShowForm(true);
     }
   };
 
@@ -323,106 +342,168 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
           </button>
         </div>
         
-        <div className="p-4 space-y-4">
-          {/* Detect location button */}
-          <Button 
-            variant="default" 
-            className="w-full gap-2 bg-green-500 hover:bg-green-600 text-base h-12"
-            onClick={detectLocation}
-            disabled={detectingLocation}
-          >
-            {detectingLocation ? (
-              <Loader2 className="h-5 w-5 animate-spin" />
-            ) : (
-              <MapPin className="h-5 w-5" />
-            )}
-            {detectingLocation ? "Detecting..." : "Detect my location"}
-          </Button>
-          
-          {/* OR divider */}
-          <div className="flex items-center gap-2">
-            <div className="border-t flex-1"></div>
-            <span className="text-gray-400 text-sm">OR</span>
-            <div className="border-t flex-1"></div>
-          </div>
-          
-          {/* Search input with dropdown */}
-          <div className="relative">
-            <div className="flex gap-2">
-              <div className="relative flex-1">
-                <Input
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search area, street name..."
-                  className="pr-10"
-                />
-                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                  {isSearching ? (
-                    <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
-                  ) : (
-                    <Search className="h-4 w-4 text-gray-400" />
-                  )}
-                </div>
+        <div className="p-4">
+          {!showForm ? (
+            <div className="space-y-4">
+              {/* Detect location button */}
+              <Button 
+                variant="default" 
+                className="w-full gap-2 bg-green-500 hover:bg-green-600 text-base h-12"
+                onClick={detectLocation}
+                disabled={detectingLocation}
+              >
+                {detectingLocation ? (
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                ) : (
+                  <MapPin className="h-5 w-5" />
+                )}
+                {detectingLocation ? "Detecting..." : "Detect my location"}
+              </Button>
+              
+              {/* OR divider */}
+              <div className="flex items-center gap-2">
+                <div className="border-t flex-1"></div>
+                <span className="text-gray-400 text-sm">OR</span>
+                <div className="border-t flex-1"></div>
               </div>
               
-              <Button 
-                className="bg-green-500 hover:bg-green-600"
-                onClick={() => {
-                  if (searchQuery.trim()) {
-                    if (isAuthenticated && user?.id) {
-                      saveLocation(searchQuery);
-                    } else {
-                      handleSelectLocation(searchQuery);
-                    }
-                  }
-                }}
-              >
-                <Search className="h-4 w-4" />
-              </Button>
-            </div>
-            
-            {/* Search results dropdown */}
-            {searchResults.length > 0 && (
-              <div className="absolute z-10 mt-1 w-full bg-white border rounded-md shadow-lg max-h-60 overflow-auto">
-                {searchResults.map((result, index) => (
-                  <div
-                    key={index}
-                    className="p-2 hover:bg-gray-100 cursor-pointer text-sm"
-                    onClick={() => handleSearchResultClick(result)}
-                  >
-                    <div className="flex items-center">
-                      <MapPin className="h-3.5 w-3.5 text-gray-400 mr-2" />
-                      {result}
+              {/* Search input with dropdown */}
+              <div className="relative">
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Input
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Search area, street name..."
+                      className="pr-10"
+                    />
+                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                      {isSearching ? (
+                        <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+                      ) : null}
                     </div>
                   </div>
-                ))}
+                  
+                  <Button 
+                    className="bg-green-500 hover:bg-green-600"
+                    onClick={handleManualSearch}
+                    disabled={!searchQuery.trim()}
+                  >
+                    Search
+                  </Button>
+                </div>
+                
+                {/* Search results dropdown */}
+                {searchResults.length > 0 && (
+                  <div className="absolute z-10 mt-1 w-full bg-white border rounded-md shadow-lg max-h-60 overflow-auto">
+                    {searchResults.map((result, index) => (
+                      <div
+                        key={index}
+                        className="p-2 hover:bg-gray-100 cursor-pointer text-sm"
+                        onClick={() => handleSearchResultClick(result)}
+                      >
+                        <div className="flex items-center">
+                          <MapPin className="h-3.5 w-3.5 text-gray-400 mr-2" />
+                          {result}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-          
-          {/* Saved locations (for authenticated users) */}
-          {isAuthenticated && (
-            <>
-              <div className="text-sm font-medium mt-2">Saved Locations</div>
-              {renderSavedLocations()}
-            </>
-          )}
-          
-          {/* Sign in prompt for non-authenticated users */}
-          {!isAuthenticated && (
-            <div className="text-center mt-4">
-              <p className="text-sm text-gray-500 mb-2">
-                Sign in to save locations for faster checkout
-              </p>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  onClose();
-                  window.location.href = '/auth/signin';
-                }}
-              >
-                Sign In
-              </Button>
+              
+              {/* Saved locations (for authenticated users) */}
+              {isAuthenticated && (
+                <>
+                  <div className="text-sm font-medium mt-2">Saved Locations</div>
+                  {renderSavedLocations()}
+                </>
+              )}
+              
+              {/* Sign in prompt for non-authenticated users */}
+              {!isAuthenticated && (
+                <div className="text-center mt-4">
+                  <p className="text-sm text-gray-500 mb-2">
+                    Sign in to save locations for faster checkout
+                  </p>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      onClose();
+                      window.location.href = '/auth/signin';
+                    }}
+                  >
+                    Sign In
+                  </Button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <DialogDescription className="text-center">
+                Please confirm your location or add additional details
+              </DialogDescription>
+              
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="address"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Address</FormLabel>
+                        <FormControl>
+                          <Input {...field} readOnly={!!formattedAddress} />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <FormField
+                    control={form.control}
+                    name="additionalDetails"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Additional Details</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            {...field} 
+                            placeholder="Apartment number, landmark, etc." 
+                            className="min-h-[80px]"
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <div className="flex gap-2">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={() => {
+                        setShowForm(false);
+                        setFormattedAddress(null);
+                        form.reset();
+                      }}
+                      className="flex-1"
+                    >
+                      Cancel
+                    </Button>
+                    <Button 
+                      type="submit" 
+                      className="flex-1 bg-green-500 hover:bg-green-600"
+                      disabled={isAddingLocation || !form.getValues().address}
+                    >
+                      {isAddingLocation ? (
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      ) : (
+                        <Check className="h-4 w-4 mr-2" />
+                      )}
+                      Confirm Location
+                    </Button>
+                  </div>
+                </form>
+              </Form>
             </div>
           )}
         </div>

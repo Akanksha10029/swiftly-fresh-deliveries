@@ -19,9 +19,17 @@ Deno.serve(async (req) => {
       );
     }
     
-    const url = `https://api.opencagedata.com/geocode/v1/json?q=${lat}+${lng}&key=${OPENCAGE_API_KEY}&language=en`;
+    console.log(`Reverse geocoding coordinates: ${lat}, ${lng}`);
+    const url = `https://api.opencagedata.com/geocode/v1/json?q=${lat}+${lng}&key=${OPENCAGE_API_KEY}&language=en&pretty=1`;
+    
     const response = await fetch(url);
+    
+    if (!response.ok) {
+      throw new Error(`OpenCage API responded with status: ${response.status}`);
+    }
+    
     const data = await response.json();
+    console.log("OpenCage API response:", JSON.stringify(data));
     
     if (data.results && data.results.length > 0) {
       const result = data.results[0];
@@ -31,21 +39,45 @@ Deno.serve(async (req) => {
       const formattedAddress = {
         fullAddress: result.formatted,
         street: components.road || components.street || '',
-        neighbourhood: components.neighbourhood || components.suburb || '',
+        neighbourhood: components.suburb || components.neighbourhood || components.district || '',
         city: components.city || components.town || components.village || '',
         state: components.state || '',
         postcode: components.postcode || '',
         country: components.country || '',
       };
       
+      // Create a user-friendly display address
+      let displayAddress = '';
+      
+      if (components.suburb || components.neighbourhood || components.district) {
+        displayAddress += components.suburb || components.neighbourhood || components.district;
+      }
+      
+      if (components.city || components.town || components.village) {
+        const cityPart = components.city || components.town || components.village;
+        displayAddress += displayAddress ? `, ${cityPart}` : cityPart;
+      }
+      
+      if (!displayAddress && components.state) {
+        displayAddress = components.state;
+      }
+      
+      if (!displayAddress) {
+        displayAddress = result.formatted;
+      }
+      
+      console.log("Formatted address:", displayAddress);
+      
       return new Response(
         JSON.stringify({ 
           success: true, 
-          address: formattedAddress 
+          address: formattedAddress,
+          displayAddress
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     } else {
+      console.error("No results found for location");
       return new Response(
         JSON.stringify({ 
           success: false, 
@@ -55,6 +87,7 @@ Deno.serve(async (req) => {
       );
     }
   } catch (error) {
+    console.error("Geocoding error:", error.message);
     return new Response(
       JSON.stringify({ success: false, error: error.message }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
