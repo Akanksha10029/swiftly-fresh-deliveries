@@ -8,7 +8,6 @@ import { toast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useForm } from 'react-hook-form';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 interface LocationModalProps {
   isOpen: boolean;
@@ -19,6 +18,16 @@ interface LocationModalProps {
 interface LocationFormValues {
   address: string;
   additionalDetails: string;
+}
+
+interface FormattedAddress {
+  fullAddress: string;
+  street: string;
+  neighbourhood: string;
+  city: string;
+  state: string;
+  postcode: string;
+  country: string;
 }
 
 const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelectLocation }) => {
@@ -121,24 +130,59 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
           console.log("Location detected:", latitude, longitude);
           
           try {
-            // Simulate reverse geocoding - replace with actual API call
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            const detectedLocation = `Detected Location (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`;
+            // Call our Supabase Edge Function for reverse geocoding
+            const { data, error } = await supabase.functions.invoke('geocoding', {
+              body: { lat: latitude, lng: longitude }
+            });
             
-            if (isAuthenticated && user?.id) {
-              saveLocation(detectedLocation);
+            if (error) throw error;
+            
+            if (data && data.success && data.address) {
+              const address = data.address as FormattedAddress;
+              
+              // Format the address in a user-friendly way
+              let formattedAddress = '';
+              
+              if (address.neighbourhood) {
+                formattedAddress += address.neighbourhood;
+              }
+              
+              if (address.city) {
+                formattedAddress += formattedAddress ? `, ${address.city}` : address.city;
+              }
+              
+              if (address.state) {
+                formattedAddress += formattedAddress ? `, ${address.state}` : address.state;
+              }
+              
+              if (address.postcode) {
+                formattedAddress += ` ${address.postcode}`;
+              }
+              
+              // Use a shorter version if the full address is too long
+              const displayAddress = formattedAddress || address.fullAddress;
+              
+              if (isAuthenticated && user?.id) {
+                saveLocation(displayAddress);
+              } else {
+                // For non-authenticated users, just set the location
+                handleSelectLocation(displayAddress);
+              }
+              
+              toast({
+                title: "Location detected",
+                description: `Delivering to ${displayAddress}`,
+              });
             } else {
-              // For non-authenticated users, just set the location
-              handleSelectLocation(detectedLocation);
+              throw new Error('Could not decode location');
             }
           } catch (error) {
             console.error('Error reverse geocoding:', error);
             toast({
               title: 'Error',
-              description: 'Failed to convert coordinates to address',
+              description: 'Failed to get your address. Please enter manually.',
               variant: 'destructive',
             });
-          } finally {
             setDetectingLocation(false);
           }
         },
@@ -146,10 +190,15 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
           console.error('Geolocation error:', error);
           toast({
             title: 'Location detection failed',
-            description: 'Please enter your address manually',
+            description: 'Please allow location access or enter your address manually',
             variant: 'destructive',
           });
           setDetectingLocation(false);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
         }
       );
     } else {
@@ -199,6 +248,7 @@ const LocationModal: React.FC<LocationModalProps> = ({ isOpen, onClose, onSelect
       });
     } finally {
       setIsLoading(false);
+      setDetectingLocation(false);
     }
   };
 
